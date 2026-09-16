@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Sonance",
+    "slug": "sonance",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": false,
+    "scheme": "sonance",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0b0f19"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jhet.sonance",
+      "infoPlist": {
+        "CFBundleDisplayName": "Sonance",
+        "NSLocalNetworkUsageDescription": "Sonance requires local network access to broadcast Wake-on-LAN packets and send power commands to your PC.",
+        "NSMicrophoneUsageDescription": "Sonance needs microphone access to listen for your voice commands.",
+        "NSSpeechRecognitionUsageDescription": "Sonance uses speech recognition to execute PC actions like Turn On, Restart, and Shutdown.",
+        "NSBonjourServices": [
+          "_http._tcp",
+          "_sonance._tcp"
+        ],
+        "UIBackgroundModes": [
+          "fetch"
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundColor": "#0b0f19"
+      },
+      "package": "com.jhet.sonance"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-asset",
+      "expo-font"
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "pc-control-native",
+  "version": "1.0.0",
+  "description": "Native Swift module for Wake-on-LAN UDP broadcast and Siri Shortcuts PC Control",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [
+    "react-native",
+    "expo",
+    "wake-on-lan",
+    "wol",
+    "swift"
+  ],
+  "author": "Jhet",
+  "license": "MIT",
+  "peerDependencies": {
+    "expo": "*"
+  }
+}
