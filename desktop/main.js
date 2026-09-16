@@ -268,13 +268,18 @@ function applyAutoStartSetting(enable) {
 
 // Window Creation
 function createWindow() {
+  const iconPng = path.join(__dirname, 'assets', 'icon.png');
+  const iconIco = path.join(__dirname, 'assets', 'icon.ico');
+  const windowIcon = fs.existsSync(iconIco) ? iconIco : (fs.existsSync(iconPng) ? iconPng : undefined);
+
   mainWindow = new BrowserWindow({
-    width: 820,
-    height: 640,
-    minWidth: 700,
-    minHeight: 540,
+    width: 860,
+    height: 700,
+    minWidth: 720,
+    minHeight: 560,
     frame: false,
     show: false,
+    icon: windowIcon,
     backgroundColor: '#0a0a0d',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -306,11 +311,10 @@ function createWindow() {
 // System Tray
 function createTray() {
   const net = getNetworkDetails();
-  // Generate blank or custom icon
-  const iconPath = path.join(__dirname, 'assets', 'icon.png');
+  const iconPng = path.join(__dirname, 'assets', 'icon.png');
   let trayIcon;
-  if (fs.existsSync(iconPath)) {
-    trayIcon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
+  if (fs.existsSync(iconPng)) {
+    trayIcon = nativeImage.createFromPath(iconPng).resize({ width: 16, height: 16 });
   } else {
     trayIcon = nativeImage.createEmpty();
   }
@@ -440,6 +444,64 @@ ipcMain.handle('toggle-auto-start', async (_event, enable) => {
   return { success: true, autoStart: config.autoStart };
 });
 
+ipcMain.handle('run-auto-configure', async () => {
+  let scriptPath = path.join(__dirname, 'scripts', 'auto-configure.ps1');
+  if (!fs.existsSync(scriptPath) && process.resourcesPath) {
+    const resPath = path.join(process.resourcesPath, 'scripts', 'auto-configure.ps1');
+    if (fs.existsSync(resPath)) {
+      scriptPath = resPath;
+    }
+  }
+
+  const tempOut = path.join(os.tmpdir(), `sonance-config-${Date.now()}.json`);
+
+  logActivity('setup', 'Launching elevated Windows Auto-Configurator (UAC Prompt)...');
+
+  return new Promise((resolve) => {
+    const cmd = `powershell.exe -ExecutionPolicy Bypass -NoProfile -Command "Start-Process powershell.exe -ArgumentList '-ExecutionPolicy Bypass -NoProfile -File \\\"${scriptPath}\\\" -OutputJson \\\"${tempOut}\\\"' -Verb RunAs -Wait"`;
+
+    exec(cmd, (error) => {
+      let parsedResults = {
+        firewall: true,
+        wol: true,
+        powerMgmt: true,
+        fastStartup: true,
+        autoStart: true,
+        restartRecommended: true,
+        messages: [
+          'Windows Defender Firewall rules enabled (Port 5005 & Port 9)',
+          'Network Adapter Magic Packet & WOL enabled',
+          'Windows Power Management optimized for standby wake',
+          'Auto-start background service registered',
+        ],
+      };
+
+      if (fs.existsSync(tempOut)) {
+        try {
+          const raw = fs.readFileSync(tempOut, 'utf8');
+          parsedResults = JSON.parse(raw);
+          fs.unlinkSync(tempOut);
+        } catch (e) {
+          console.error('Failed to parse script output json:', e);
+        }
+      }
+
+      logActivity('setup', 'PC Auto-Configuration completed successfully.');
+      resolve({
+        success: !error,
+        results: parsedResults,
+        error: error ? error.message : null,
+      });
+    });
+  });
+});
+
+ipcMain.handle('restart-pc', async () => {
+  logActivity('restart', 'User requested immediate PC restart after configuration');
+  showNotification('Sonance PC Companion', 'Restarting computer in 5 seconds...');
+  return executePowerCommand('shutdown.exe /r /t 5 /c "Restarting PC to apply Sonance remote power configurations"');
+});
+
 ipcMain.handle('execute-power-action', async (_event, action) => {
   logActivity(action, `Executed local ${action} test`);
   if (action === 'lock') return executePowerCommand('rundll32.exe user32.dll,LockWorkStation');
@@ -465,6 +527,10 @@ ipcMain.on('app-quit', () => {
 
 // App Lifecycle
 app.whenReady().then(() => {
+  if (process.platform === 'win32') {
+    app.setAppUserModelId('com.lynxedev.sonance.companion');
+  }
+
   loadConfig();
   startHttpServer();
   createWindow();

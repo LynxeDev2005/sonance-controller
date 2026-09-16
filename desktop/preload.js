@@ -6,6 +6,8 @@ contextBridge.exposeInMainWorld('sonanceAPI', {
   updateConfig: (newConfig) => ipcRenderer.invoke('update-config', newConfig),
   toggleAutoStart: (enable) => ipcRenderer.invoke('toggle-auto-start', enable),
   executePowerAction: (action) => ipcRenderer.invoke('execute-power-action', action),
+  runAutoConfigure: () => ipcRenderer.invoke('run-auto-configure'),
+  restartPC: () => ipcRenderer.invoke('restart-pc'),
   copyToClipboard: (text) => {
     clipboard.writeText(text);
     return true;

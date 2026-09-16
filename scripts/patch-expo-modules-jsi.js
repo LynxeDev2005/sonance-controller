@@ -152,3 +152,27 @@ private func setActivated(_ activated: Bool) {
     console.log(`✓ Successfully patched ${keepAwakePath}`);
   }
 });
+
+// 5. Patch RuntimeScheduler.h for Swift 6.2 C++ interoperability constructor annotations
+const runtimeSchedulerPath = path.join(
+  __dirname,
+  '..',
+  'node_modules',
+  'expo-modules-jsi',
+  'apple',
+  'Sources',
+  'ExpoModulesJSI-Cxx',
+  'include',
+  'RuntimeScheduler.h'
+);
+
+if (fs.existsSync(runtimeSchedulerPath)) {
+  let content = fs.readFileSync(runtimeSchedulerPath, 'utf8');
+  content = content.replace(
+    /SWIFT_RETURNS_RETAINED\s+RuntimeScheduler\(/g,
+    'RuntimeScheduler('
+  );
+  fs.writeFileSync(runtimeSchedulerPath, content, 'utf8');
+  console.log('✓ Successfully patched RuntimeScheduler.h for Swift 6.2 constructor interoperability');
+}
+

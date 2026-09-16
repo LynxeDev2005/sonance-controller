@@ -11,7 +11,7 @@
   <div class="titlebar">
     <div class="titlebar-drag-region">
       <div class="app-brand">
-        <span class="brand-dot"></span>
+        <img src="../assets/icon.png" class="titlebar-logo" alt="Sonance Logo">
         <span class="brand-name">SONANCE</span>
         <span class="brand-badge">COMPANION</span>
       </div>
@@ -37,6 +37,24 @@
       <div class="host-info">
         <span id="hostname-display">DESKTOP-PC</span> &middot; <span id="port-display">PORT 5005</span>
       </div>
+    </div>
+
+    <!-- 1-Click Auto-Configuration Banner -->
+    <div class="auto-config-banner" id="auto-config-banner">
+      <div class="auto-config-info">
+        <div class="auto-config-badge">
+          <span class="lightning-icon">⚡</span>
+          <span>1-CLICK AUTOMATIC PC SETUP</span>
+        </div>
+        <h3 class="auto-config-title">Auto-Configure Remote Control & Wake-on-LAN</h3>
+        <p class="auto-config-desc">
+          Automatically configures Windows Defender Firewall (Port 5005 & 9), Network Card Magic Packet (WOL), Power States, and Background Daemon in one click with administrator privileges.
+        </p>
+      </div>
+      <button class="auto-config-btn" id="btn-auto-configure">
+        <span class="btn-icon">⚡</span>
+        <span id="btn-auto-configure-text">Auto-Configure PC</span>
+      </button>
     </div>
 
     <!-- Main Grid: QR Code & Connection Details -->
@@ -125,6 +143,78 @@
         <div class="log-entry system">
           <span class="log-time">[Init]</span>
           <span class="log-msg">Sonance PC Companion initialized and listening.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auto-Configuration Results & Restart Modal -->
+  <div class="modal-backdrop" id="auto-config-modal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="modal-icon">⚡</span>
+          <span class="modal-title">PC REMOTE AUTO-CONFIGURATOR</span>
+        </div>
+        <button class="modal-close-btn" id="btn-close-modal">&times;</button>
+      </div>
+
+      <!-- Loading State -->
+      <div class="modal-body" id="modal-loading-state">
+        <div class="spinner"></div>
+        <p class="modal-status-text">Applying administrator optimizations...</p>
+        <p class="modal-subtext">Please approve the Windows UAC elevation prompt on your screen.</p>
+      </div>
+
+      <!-- Results & Restart State -->
+      <div class="modal-body" id="modal-result-state" style="display: none;">
+        <div class="checklist">
+          <div class="checklist-item" id="check-firewall">
+            <span class="check-icon">✓</span>
+            <div class="check-text-group">
+              <span class="check-title">Windows Defender Firewall Allowed</span>
+              <span class="check-desc">Inbound Port 5005 (TCP) & Port 9 (UDP)</span>
+            </div>
+          </div>
+          <div class="checklist-item" id="check-wol">
+            <span class="check-icon">✓</span>
+            <div class="check-text-group">
+              <span class="check-title">Network Card Wake-on-LAN (Magic Packet)</span>
+              <span class="check-desc">Active physical adapters enabled for remote power on</span>
+            </div>
+          </div>
+          <div class="checklist-item" id="check-power">
+            <span class="check-icon">✓</span>
+            <div class="check-text-group">
+              <span class="check-title">Network Power States & Fast Startup</span>
+              <span class="check-desc">Configured for standby NIC power on shutdown</span>
+            </div>
+          </div>
+          <div class="checklist-item" id="check-autostart">
+            <span class="check-icon">✓</span>
+            <div class="check-text-group">
+              <span class="check-title">Background Agent Auto-Startup</span>
+              <span class="check-desc">Daemon will start silently on Windows boot</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="restart-prompt-box">
+          <div class="restart-prompt-header">
+            <span class="restart-prompt-icon">🔄</span>
+            <span class="restart-prompt-title">Restart Recommended</span>
+          </div>
+          <p class="restart-prompt-desc">
+            Restart your PC now so Windows and your network hardware controller apply all power state and driver changes.
+          </p>
+          <div class="restart-actions">
+            <button class="restart-now-btn" id="btn-restart-now">
+              <span>Restart PC Now (5s)</span>
+            </button>
+            <button class="restart-later-btn" id="btn-restart-later">
+              <span>Done / Restart Later</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
