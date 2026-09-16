@@ -27,6 +27,7 @@ export const DeviceSelectModal: React.FC<DeviceSelectModalProps> = ({
   activeDeviceId,
   onSelectDevice,
   onAddNewDevice,
+  onScanQR,
   onClose,
 }) => {
   return (

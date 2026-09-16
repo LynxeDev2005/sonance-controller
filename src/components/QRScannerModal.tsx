@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal,
   View,
@@ -193,7 +193,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
           <View style={styles.cameraContainer}>
             {/* Live Camera Feed - Top level full screen */}
             <CameraView
-              style={StyleSheet.absoluteFillObject}
+              style={StyleSheet.absoluteFill}
               facing="back"
               enableTorch={torch}
               barcodeScannerSettings={{
@@ -370,7 +370,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   maskOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'space-between',
     alignItems: 'center',
   },
