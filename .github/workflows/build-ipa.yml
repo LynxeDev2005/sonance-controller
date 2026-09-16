@@ -170,6 +170,7 @@ jobs:
             -sdk iphoneos \
             -destination "generic/platform=iOS" \
             -derivedDataPath build \
+            SWIFT_VERSION=5.0 \
             SWIFT_STRICT_CONCURRENCY=off \
             SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
             GCC_WARN_INHIBIT_ALL_WARNINGS=YES \
