@@ -11,11 +11,16 @@ import {
 import * as Haptics from 'expo-haptics';
 import { DeviceConfig, PCStatus, PowerAction } from '../types';
 import { PCControlService } from '../services/pcControlService';
-import { StatusHeader } from '../components/StatusHeader';
 import { ActionCard } from '../components/ActionCard';
 import { VoiceModal } from '../components/VoiceModal';
-import { DeviceSelectModal } from '../components/DeviceSelectModal';
-import { Mic, CheckCircle2, AlertCircle, Sliders, BookOpen } from 'lucide-react-native';
+import { DeviceCardCarousel } from '../components/DeviceCardCarousel';
+import {
+  Mic,
+  CheckCircle2,
+  AlertCircle,
+  Sliders,
+  BookOpen,
+} from 'lucide-react-native';
 
 interface DashboardScreenProps {
   device: DeviceConfig;
@@ -34,33 +39,49 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onOpenSettings,
   onOpenSiriGuide,
 }) => {
-  const [status, setStatus] = useState<PCStatus | null>(null);
+  const [statuses, setStatuses] = useState<Record<string, PCStatus | null>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeActionLoading, setActiveActionLoading] = useState<PowerAction | null>(null);
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
-  const [deviceSelectVisible, setDeviceSelectVisible] = useState(false);
   const [lastNotification, setLastNotification] = useState<{
     type: 'success' | 'error';
     message: string;
   } | null>(null);
 
-  const refreshStatus = useCallback(async () => {
+  const refreshAllStatuses = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      const res = await PCControlService.checkStatus(device);
-      setStatus(res);
-    } catch (e) {
-      setStatus({ online: false, lastChecked: Date.now() });
+      const results = await Promise.allSettled(
+        devices.map(async (d) => {
+          try {
+            const res = await PCControlService.checkStatus(d);
+            return { id: d.id, status: res };
+          } catch {
+            return { id: d.id, status: { online: false, lastChecked: Date.now() } };
+          }
+        })
+      );
+
+      const newStatuses: Record<string, PCStatus | null> = {};
+      results.forEach((r, idx) => {
+        const dev = devices[idx];
+        if (r.status === 'fulfilled' && r.value) {
+          newStatuses[r.value.id] = r.value.status;
+        } else {
+          newStatuses[dev.id] = { online: false, lastChecked: Date.now() };
+        }
+      });
+      setStatuses(newStatuses);
     } finally {
       setIsRefreshing(false);
     }
-  }, [device]);
+  }, [devices]);
 
   useEffect(() => {
-    refreshStatus();
-    const interval = setInterval(refreshStatus, 8000);
+    refreshAllStatuses();
+    const interval = setInterval(refreshAllStatuses, 8000);
     return () => clearInterval(interval);
-  }, [refreshStatus]);
+  }, [refreshAllStatuses]);
 
   const showBanner = (type: 'success' | 'error', message: string) => {
     setLastNotification({ type, message });
@@ -79,7 +100,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         } catch {}
         showBanner('success', result.message);
-        setTimeout(refreshStatus, 1500);
+        setTimeout(refreshAllStatuses, 1500);
       } else {
         try {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -95,7 +116,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Clean Top Header */}
+      {/* Clean Neumorphic Top Header */}
       <View style={styles.headerBar}>
         <View style={styles.brandContainer}>
           <Image
@@ -114,7 +135,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             } catch {}
             setVoiceModalVisible(true);
           }}
-          activeOpacity={0.7}
+          activeOpacity={0.75}
         >
           <Mic size={14} color="#000000" />
           <Text style={styles.voiceTriggerText}>Voice</Text>
@@ -126,16 +147,16 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Device Status Header with Dropdown Switcher */}
-        <StatusHeader
-          device={device}
-          status={status}
-          isLoading={isRefreshing}
-          onRefresh={refreshStatus}
-          onPressDevice={() => setDeviceSelectVisible(true)}
+        {/* Horizontal Square Device Card Deck with Add Button */}
+        <DeviceCardCarousel
+          devices={devices}
+          activeDeviceId={device.id}
+          statuses={statuses}
+          onSelectDevice={onSelectDevice}
+          onAddNewDevice={onAddNewDevice}
         />
 
-        {/* Compact Feedback Banner */}
+        {/* Feedback Banner */}
         {lastNotification && (
           <View style={styles.feedbackBanner}>
             {lastNotification.type === 'success' ? (
@@ -149,7 +170,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </View>
         )}
 
-        {/* Compact Power Actions List */}
+        {/* Neumorphic Power Actions List */}
         <View style={styles.actionsSection}>
           <Text style={styles.sectionTitle}>COMMANDS &middot; {device.name.toUpperCase()}</Text>
 
@@ -207,12 +228,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           />
         </View>
 
-        {/* Compact Quick Links */}
+        {/* Neumorphic Quick Links */}
         <View style={styles.quickLinksRow}>
           <TouchableOpacity
             style={styles.quickLinkBtn}
             onPress={onOpenSiriGuide}
-            activeOpacity={0.7}
+            activeOpacity={0.75}
           >
             <BookOpen size={13} color="#a1a1aa" />
             <Text style={styles.quickLinkText}>Siri Setup</Text>
@@ -220,23 +241,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <TouchableOpacity
             style={styles.quickLinkBtn}
             onPress={onOpenSettings}
-            activeOpacity={0.7}
+            activeOpacity={0.75}
           >
             <Sliders size={13} color="#a1a1aa" />
             <Text style={styles.quickLinkText}>Manage PCs ({devices.length})</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      {/* Device Switcher Modal */}
-      <DeviceSelectModal
-        visible={deviceSelectVisible}
-        devices={devices}
-        activeDeviceId={device.id}
-        onSelectDevice={onSelectDevice}
-        onAddNewDevice={onAddNewDevice}
-        onClose={() => setDeviceSelectVisible(false)}
-      />
 
       {/* Voice Control Modal */}
       <VoiceModal
@@ -251,7 +262,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#0a0a0d',
   },
   headerBar: {
     flexDirection: 'row',
@@ -280,16 +291,22 @@ const styles = StyleSheet.create({
   voiceTriggerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
     backgroundColor: '#ffffff',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    shadowColor: '#ffffff',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
   },
   voiceTriggerText: {
     color: '#000000',
     fontSize: 12,
     fontWeight: '700',
+    letterSpacing: 0.2,
   },
   scrollView: {
     flex: 1,
@@ -301,13 +318,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginHorizontal: 14,
+    marginHorizontal: 16,
     marginVertical: 4,
     padding: 10,
-    borderRadius: 10,
-    backgroundColor: '#18181b',
+    borderRadius: 12,
+    backgroundColor: '#15151a',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   bannerText: {
     flex: 1,
@@ -316,34 +333,40 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   actionsSection: {
-    marginHorizontal: 14,
-    marginTop: 6,
+    marginHorizontal: 16,
+    marginTop: 8,
   },
   sectionTitle: {
     fontSize: 10,
     fontWeight: '800',
     color: '#71717a',
-    letterSpacing: 0.8,
-    marginBottom: 4,
+    letterSpacing: 1,
+    marginBottom: 6,
     marginLeft: 2,
   },
   quickLinksRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginHorizontal: 14,
-    marginTop: 10,
+    gap: 10,
+    marginHorizontal: 16,
+    marginTop: 12,
   },
   quickLinkBtn: {
     flex: 1,
-    backgroundColor: '#0f0f12',
+    backgroundColor: '#15151a',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-    borderRadius: 10,
-    paddingVertical: 10,
+    borderColor: 'rgba(255, 255, 255, 0.07)',
+    borderTopColor: 'rgba(255, 255, 255, 0.14)',
+    borderRadius: 14,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 3,
   },
   quickLinkText: {
     color: '#d4d4d8',

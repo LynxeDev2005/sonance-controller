@@ -1,14 +1,13 @@
 @echo off
 setlocal
-echo ===================================================
-echo   Installing PC Control Agent to Windows Startup
-echo ===================================================
+echo =======================================================
+echo   Installing Sonance Companion to Windows Startup
+echo =======================================================
 
 set "SCRIPT_DIR=%~dp0"
-set "AGENT_JS=%SCRIPT_DIR%agent.js"
-set "VBS_FILE=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\PCControlAgent.vbs"
+set "VBS_FILE=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\SonanceCompanion.vbs"
 
-echo Creating silent background runner in Startup folder:
+echo Creating silent background launcher in Startup folder:
 echo %VBS_FILE%
 
 (
@@ -18,10 +17,10 @@ echo %VBS_FILE%
 ) > "%VBS_FILE%"
 
 echo.
-echo [SUCCESS] PC Control Agent has been installed to Windows Startup!
-echo It will now run silently in the background automatically when your PC turns on.
+echo [SUCCESS] Sonance Companion is now configured to start automatically on Windows boot!
 echo.
-echo To start it right now in the background, executing:
+echo Launching silent background process right now...
 wscript "%VBS_FILE%"
-echo Agent is now active!
+echo Companion is now running in the background!
+echo Web Dashboard available at: http://localhost:5005
 pause

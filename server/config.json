@@ -1,5 +1,7 @@
 {
   "port": 5005,
-  "pin": "1234",
+  "pin": "2005",
+  "gracePeriodSec": 5,
+  "autoStartEnabled": true,
   "allowedIps": []
 }

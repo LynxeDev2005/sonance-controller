@@ -1,25 +1,36 @@
-# 🖥️ PC Control Windows Companion Daemon
+# 🖥️ SONANCE — PC Companion Software for Windows
 
-A lightweight HTTP background server running on Windows with **zero external npm dependencies**.
+A dedicated, lightweight background companion software for your Windows PC designed to pair with the **Sonance iOS App**.
 
-## Features
-- **Endpoints**:
-  - `GET /api/status` - Live system telemetry (hostname, uptime, RAM, latency)
-  - `POST /api/power/shutdown` - Triggers Windows shutdown sequence (`shutdown /s /t 5`)
-  - `POST /api/power/restart` - Triggers Windows reboot sequence (`shutdown /r /t 5`)
-  - `POST /api/power/sleep` - Puts PC into low power sleep mode
-  - `POST /api/power/lock` - Locks the Windows session
-  - `POST /api/power/abort` - Cancels pending shutdown/restart (`shutdown /a`)
-- **Security**: PIN authentication via `x-auth-token` header or `?pin=1234`.
+---
 
-## Running the Agent
+## ⚡ Features
 
-### Option 1: Run manually
-Double-click `start-agent.bat` or run:
-```bash
-node agent.js
-```
+- 🟢 **Runs Silently on Windows Boot**: Automatically boots in the background with **0 command prompt windows** using a lightweight VBScript runner.
+- 🎛️ **Web Control Center (`http://localhost:5005`)**:
+  - Displays your PC's exact **Local IPv4 Address** and **NIC MAC Address** for easy iOS pairing.
+  - **Live Execution Logs**: View commands sent from your iPhone in real-time.
+  - **1-Click Startup Toggle**: Enable or disable Windows auto-start directly from the browser.
+  - **Manual Power Triggers**: Test Shutdown, Restart, Sleep, and Lock.
+  - **Customizable Security PIN**: Protect remote power execution.
+- 🔒 **Supported Remote Commands**:
+  - `POST /api/power/shutdown` -> Windows shutdown (`shutdown.exe /s /t <grace>`)
+  - `POST /api/power/restart` -> Windows restart (`shutdown.exe /r /t <grace>`)
+  - `POST /api/power/sleep` -> Windows sleep mode (`rundll32.exe powrprof.dll,SetSuspendState 0,1,0`)
+  - `POST /api/power/lock` -> Lock screen (`rundll32.exe user32.dll,LockWorkStation`)
+  - `POST /api/power/abort` -> Cancel pending shutdown/restart (`shutdown.exe /a`)
+  - `GET /api/status` -> Live CPU, RAM, Uptime, and hostname telemetry
 
-### Option 2: Run silently on Windows Startup (Recommended)
-Double-click `install-startup.bat`.
-This creates a background launcher in your Windows Startup directory (`%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup`) so the server starts automatically whenever your computer boots up.
+---
+
+## 🚀 Installation & Usage
+
+### Option 1: Automatic Startup on Windows Boot (Recommended)
+1. Double-click **`install-startup.bat`**.
+2. That's it! Sonance Companion is now registered in Windows Startup (`%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup`) and will silently run every time your PC turns on.
+
+### Option 2: Run with Web Dashboard
+Double-click **`start-companion.bat`**. This starts the agent and opens `http://localhost:5005` in your browser.
+
+### Option 3: Uninstall from Startup
+Double-click **`uninstall-startup.bat`** to remove the auto-start background launcher.

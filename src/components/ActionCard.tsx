@@ -61,8 +61,7 @@ export const ActionCard: React.FC<ActionCardProps> = ({
   };
 
   const renderIcon = () => {
-    const iconColor = isPrimary ? '#000000' : '#ffffff';
-    const props = { size: 18, color: iconColor };
+    const props = { size: 18, color: '#ffffff' };
     switch (iconName) {
       case 'power':
         return <Power {...props} />;
@@ -106,37 +105,47 @@ export const ActionCard: React.FC<ActionCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginVertical: 4,
+    marginVertical: 4.5,
   },
   cardPrimary: {
     backgroundColor: '#ffffff',
-    borderColor: '#ffffff',
+    shadowColor: '#ffffff',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 6,
   },
   cardSecondary: {
-    backgroundColor: '#0f0f12',
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: '#15151a',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.07)',
+    borderTopColor: 'rgba(255, 255, 255, 0.15)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.45,
+    shadowRadius: 8,
+    elevation: 4,
   },
   iconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 9,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconPrimary: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#000000',
   },
   iconSecondary: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#0c0c0f',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: 'rgba(255, 255, 255, 0.09)',
   },
   textContainer: {
     flex: 1,
@@ -156,6 +165,6 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   subtitlePrimary: {
-    color: '#3f3f46',
+    color: '#52525b',
   },
 });
