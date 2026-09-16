@@ -218,7 +218,7 @@ if (fs.existsSync(runtimeSchedulerPath)) {
   console.log('✓ Successfully patched RuntimeScheduler.h for Swift 6.2 constructor interoperability');
 }
 
-// 6. Patch JavaScriptRuntime.swift pointer isolation in expo-modules-jsi
+// 6. Patch JavaScriptRuntime.swift in expo-modules-jsi
 const jsRuntimePath = path.join(
   __dirname,
   '..',
@@ -234,28 +234,31 @@ const jsRuntimePath = path.join(
 if (fs.existsSync(jsRuntimePath)) {
   let content = fs.readFileSync(jsRuntimePath, 'utf8');
 
+  // Collapse any duplicate nonisolated(unsafe) lines if previously injected
+  content = content.replace(/(?:\s*nonisolated\(unsafe\) let resultPtr = resultPtr)+/g, '\n      nonisolated(unsafe) let resultPtr = resultPtr');
+  content = content.replace(/(?:\s*nonisolated\(unsafe\) let valuePointer = valuePointer)+/g, '\n      nonisolated(unsafe) let valuePointer = valuePointer');
+  content = content.replace(/(?:\s*nonisolated\(unsafe\) let thisPtr = thisPtr\s*nonisolated\(unsafe\) let argumentsPtr = argumentsPtr\s*nonisolated\(unsafe\) let resultPtr = resultPtr)+/g, '\n    nonisolated(unsafe) let thisPtr = thisPtr\n    nonisolated(unsafe) let argumentsPtr = argumentsPtr\n    nonisolated(unsafe) let resultPtr = resultPtr');
+
   // Patch getter resultPtr
-  content = content.replace(
-    /func getter\(\s*context: UnsafeMutableRawPointer,\s*propertyName: UnsafePointer<CChar>,\s*resultPtr: UnsafeMutablePointer<facebook\.jsi\.Value>\s*\) -> Bool \{\s*let propertyName = String\(cString: propertyName\)/g,
-    'func getter(\n      context: UnsafeMutableRawPointer,\n      propertyName: UnsafePointer<CChar>,\n      resultPtr: UnsafeMutablePointer<facebook.jsi.Value>\n    ) -> Bool {\n      let propertyName = String(cString: propertyName)\n      nonisolated(unsafe) let resultPtr = resultPtr'
-  );
+  if (!content.includes('nonisolated(unsafe) let resultPtr = resultPtr')) {
+    content = content.replace(
+      'let propertyName = String(cString: propertyName)\n\n      return withGuaranteedContext(context) { (context: HostObjectContext, runtime) in',
+      'let propertyName = String(cString: propertyName)\n      nonisolated(unsafe) let resultPtr = resultPtr\n\n      return withGuaranteedContext(context) { (context: HostObjectContext, runtime) in'
+    );
+  }
 
   // Patch setter valuePointer
-  content = content.replace(
-    /func setter\(\s*context: UnsafeMutableRawPointer, propertyName: UnsafePointer<CChar>, valuePointer: UnsafeMutableRawPointer\s*\) -> Bool \{\s*let propertyName = String\(cString: propertyName\)/g,
-    'func setter(\n      context: UnsafeMutableRawPointer, propertyName: UnsafePointer<CChar>, valuePointer: UnsafeMutableRawPointer\n    ) -> Bool {\n      let propertyName = String(cString: propertyName)\n      nonisolated(unsafe) let valuePointer = valuePointer'
-  );
+  if (!content.includes('nonisolated(unsafe) let valuePointer = valuePointer')) {
+    content = content.replace(
+      'let propertyName = String(cString: propertyName)\n\n      return withGuaranteedContext(context) { (context: HostObjectContext, runtime) in',
+      'let propertyName = String(cString: propertyName)\n      nonisolated(unsafe) let valuePointer = valuePointer\n\n      return withGuaranteedContext(context) { (context: HostObjectContext, runtime) in'
+    );
+  }
 
-  // Patch createFunctionClosure (HostFunctionContext)
+  // Fix generic inference for UnsafeMutablePointer
   content = content.replace(
-    'return withGuaranteedContext(context) { (context: HostFunctionContext, runtime) in',
-    'nonisolated(unsafe) let thisPtr = thisPtr\n    nonisolated(unsafe) let argumentsPtr = argumentsPtr\n    nonisolated(unsafe) let resultPtr = resultPtr\n\n    return withGuaranteedContext(context) { (context: HostFunctionContext, runtime) in'
-  );
-
-  // Patch createFunctionClosure (UnownedThisHostFunctionContext)
-  content = content.replace(
-    'return withGuaranteedContext(context) { (context: UnownedThisHostFunctionContext, runtime) in',
-    'nonisolated(unsafe) let thisPtr = thisPtr\n    nonisolated(unsafe) let argumentsPtr = argumentsPtr\n    nonisolated(unsafe) let resultPtr = resultPtr\n\n    return withGuaranteedContext(context) { (context: UnownedThisHostFunctionContext, runtime) in'
+    'UnsafeMutablePointer(mutating: thisPtr).move()',
+    'UnsafeMutablePointer<facebook.jsi.Value>(mutating: thisPtr).move()'
   );
 
   // Patch regex literal for Swift 5 / bare slash compatibility
