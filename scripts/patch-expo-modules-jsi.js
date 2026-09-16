@@ -256,5 +256,25 @@ if (fs.existsSync(jsRuntimePath)) {
   console.log('✓ Successfully patched JavaScriptRuntime.swift pointer isolation');
 }
 
+// 7. Force ExpoModulesCore to build from source rather than linking prebuilt xcframework
+const expoModulesCorePodspecPath = path.join(
+  __dirname,
+  '..',
+  'node_modules',
+  'expo-modules-core',
+  'ExpoModulesCore.podspec'
+);
+
+if (fs.existsSync(expoModulesCorePodspecPath)) {
+  let content = fs.readFileSync(expoModulesCorePodspecPath, 'utf8');
+  content = content.replace(
+    /if \(!Expo::PackagesConfig\.instance\.try_link_with_prebuilt_xcframework\(s\)\)/g,
+    'if (true)'
+  );
+  fs.writeFileSync(expoModulesCorePodspecPath, content, 'utf8');
+  console.log('✓ Successfully forced ExpoModulesCore to build from source');
+}
+
+
 
 

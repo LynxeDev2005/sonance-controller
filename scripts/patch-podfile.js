@@ -39,23 +39,6 @@ if (fs.existsSync(podfilePath)) {
         elsif framework_paths.is_a?(String)
           config.build_settings['FRAMEWORK_SEARCH_PATHS'] = "#{framework_paths} #{extra_frameworks.join(' ')}"
         end
-
-        extra_includes = [
-          '$(inherited)',
-          '$(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesCore/ExpoModulesCore.framework/Modules',
-          '$(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesJSI/ExpoModulesJSI.framework/Modules',
-          '$(PODS_CONFIGURATION_BUILD_DIR)/ExpoModulesJSI/ExpoModulesJSI.framework/Modules',
-          '$(PODS_ROOT)/ExpoModulesJSI/ExpoModulesJSI.xcframework/ios-arm64/ExpoModulesJSI.framework/Modules',
-          '$(PODS_ROOT)/../../node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/ios-arm64/ExpoModulesJSI.framework/Modules'
-        ]
-        swift_includes = config.build_settings['SWIFT_INCLUDE_PATHS']
-        if swift_includes.nil?
-          config.build_settings['SWIFT_INCLUDE_PATHS'] = extra_includes
-        elsif swift_includes.is_a?(Array)
-          extra_includes.each { |p| swift_includes << p unless swift_includes.include?(p) }
-        elsif swift_includes.is_a?(String)
-          config.build_settings['SWIFT_INCLUDE_PATHS'] = "#{swift_includes} #{extra_includes.join(' ')}"
-        end
       end
     end
 `;
