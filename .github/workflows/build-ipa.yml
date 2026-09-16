@@ -193,6 +193,12 @@ jobs:
             exit 1
           fi
 
+      - name: Print build errors on failure
+        if: failure()
+        run: |
+          echo "=== XCODEBUILD ERROR SUMMARY ==="
+          grep -E -C 3 "error:|fatal error:" xcodebuild.log || tail -n 200 xcodebuild.log
+
       - name: Upload build log on failure
         if: failure()
         uses: actions/upload-artifact@v4
