@@ -30,12 +30,10 @@ if (fs.existsSync(packageSwiftPath)) {
     'swiftLanguageModes: [.v6]',
     'swiftLanguageModes: [.v5]'
   );
-  if (!content.includes('"-strict-concurrency=minimal"')) {
-    content = content.replace(
-      '"-no-verify-emitted-module-interface",',
-      '"-no-verify-emitted-module-interface",\n          "-strict-concurrency=minimal",'
-    );
-  }
+  content = content.replace(
+    '"-strict-concurrency=minimal",\n          ',
+    ''
+  );
   fs.writeFileSync(packageSwiftPath, content, 'utf8');
   console.log('✓ Successfully patched expo-modules-jsi/apple/Package.swift');
 }
@@ -85,7 +83,7 @@ if (fs.existsSync(buildScriptPath)) {
   if (!scriptContent.includes('CODE_SIGNING_ALLOWED=NO')) {
     scriptContent = scriptContent.replace(
       'CLANG_COVERAGE_MAPPING=NO \\',
-      'CLANG_COVERAGE_MAPPING=NO \\\n    CODE_SIGNING_ALLOWED=NO \\\n    CODE_SIGNING_REQUIRED=NO \\\n    ENABLE_USER_SCRIPT_SANDBOXING=NO \\\n    SWIFT_STRICT_CONCURRENCY=off \\\n    OTHER_SWIFT_FLAGS="-no-warn-concurrency -strict-concurrency=minimal" \\\n    SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \\'
+      'CLANG_COVERAGE_MAPPING=NO \\\n    CODE_SIGNING_ALLOWED=NO \\\n    CODE_SIGNING_REQUIRED=NO \\\n    ENABLE_USER_SCRIPT_SANDBOXING=NO \\\n    SWIFT_STRICT_CONCURRENCY=off \\\n    SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \\'
     );
     scriptContent = scriptContent.replace('-quiet \\\n', '');
   }
