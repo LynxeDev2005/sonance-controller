@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
+const os = require('os');
 
 console.log('[Patch] Running Swift & ExpoModulesJSI compatibility patches...');
 
@@ -256,25 +258,98 @@ if (fs.existsSync(jsRuntimePath)) {
   console.log('✓ Successfully patched JavaScriptRuntime.swift pointer isolation');
 }
 
-// 7. Force ExpoModulesCore to build from source rather than linking prebuilt xcframework
-const expoModulesCorePodspecPath = path.join(
+// 7. Patch ExpoModulesCore.swift for Swift 5 / 6 syntax compatibility
+const expoModulesCoreSwiftPath = path.join(
   __dirname,
   '..',
   'node_modules',
   'expo-modules-core',
-  'ExpoModulesCore.podspec'
+  'ios',
+  'ExpoModulesCore.swift'
 );
 
-if (fs.existsSync(expoModulesCorePodspecPath)) {
-  let content = fs.readFileSync(expoModulesCorePodspecPath, 'utf8');
-  content = content.replace(
-    /if \(!Expo::PackagesConfig\.instance\.try_link_with_prebuilt_xcframework\(s\)\)/g,
-    'if (true)'
-  );
-  fs.writeFileSync(expoModulesCorePodspecPath, content, 'utf8');
-  console.log('✓ Successfully forced ExpoModulesCore to build from source');
+if (fs.existsSync(expoModulesCoreSwiftPath)) {
+  let content = fs.readFileSync(expoModulesCoreSwiftPath, 'utf8');
+  content = content.replace('@_exported public import ExpoModulesJSI', '@_exported import ExpoModulesJSI');
+  fs.writeFileSync(expoModulesCoreSwiftPath, content, 'utf8');
+  console.log('✓ Successfully patched ExpoModulesCore.swift');
 }
 
+// 8. Patch .swiftinterface files in directories and inside prebuild .tar.gz archives
+function patchSwiftInterfacesInDir(dir) {
+  let count = 0;
+  function walk(currentDir) {
+    if (!fs.existsSync(currentDir)) return;
+    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath);
+      } else if (entry.isFile() && entry.name.endsWith('.swiftinterface')) {
+        let content = fs.readFileSync(fullPath, 'utf8');
+        const original = content;
+        content = content.replace(/Apple Swift version 6\.[3-9]\.[0-9.]+/g, 'Apple Swift version 6.0');
+        content = content.replace(/-interface-compiler-version 6\.[3-9]\.[0-9.]+/g, '-interface-compiler-version 6.0');
+        if (content !== original) {
+          fs.writeFileSync(fullPath, content, 'utf8');
+          count++;
+        }
+      }
+    }
+  }
+  walk(dir);
+  return count;
+}
 
+function patchTarGz(tarPath) {
+  if (!fs.existsSync(tarPath)) return;
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'patch-xcfw-'));
+  try {
+    execSync(`tar -xzf "${tarPath}" -C "${tempDir}"`);
+    const patchedCount = patchSwiftInterfacesInDir(tempDir);
+    if (patchedCount > 0) {
+      const topItems = fs.readdirSync(tempDir);
+      const itemsArg = topItems.map((item) => `"${item}"`).join(' ');
+      execSync(`tar -czf "${tarPath}" -C "${tempDir}" ${itemsArg}`);
+      console.log(`✓ Repacked ${path.basename(tarPath)} (${patchedCount} swiftinterface files updated to Swift 6.0)`);
+    }
+  } catch (err) {
+    console.warn(`  Warning: Could not patch tar ${tarPath}:`, err.message);
+  } finally {
+    try {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    } catch {}
+  }
+}
 
+// Find all prebuild tar.gz files in node_modules and patch them
+function patchAllPrebuilds(rootDir) {
+  function walk(currentDir) {
+    if (!fs.existsSync(currentDir)) return;
+    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === '.git') continue;
+        walk(fullPath);
+      } else if (entry.isFile() && entry.name.endsWith('.tar.gz') && fullPath.includes('prebuilds')) {
+        patchTarGz(fullPath);
+      }
+    }
+  }
+  walk(rootDir);
+}
 
+const nodeModulesDir = path.join(__dirname, '..', 'node_modules');
+if (fs.existsSync(nodeModulesDir)) {
+  patchAllPrebuilds(nodeModulesDir);
+}
+
+// Also patch any existing ios/Pods directory if present
+const podsDir = path.join(__dirname, '..', 'ios', 'Pods');
+if (fs.existsSync(podsDir)) {
+  const podsPatched = patchSwiftInterfacesInDir(podsDir);
+  if (podsPatched > 0) {
+    console.log(`✓ Patched ${podsPatched} swiftinterface files in ios/Pods`);
+  }
+}

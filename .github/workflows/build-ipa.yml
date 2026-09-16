@@ -87,6 +87,9 @@ jobs:
             echo "No Podfile found in ios/, skipping pod install."
           fi
 
+      - name: Re-apply Swift interface patches to installed Pods
+        run: node scripts/patch-expo-modules-jsi.js
+
       - name: Pre-build ExpoModulesJSI xcframework
         run: |
           echo "Building ExpoModulesJSI xcframework explicitly..."
