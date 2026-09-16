@@ -19,6 +19,7 @@
       "infoPlist": {
         "CFBundleDisplayName": "Sonance",
         "NSLocalNetworkUsageDescription": "Sonance requires local network access to broadcast Wake-on-LAN packets and send power commands to your PC.",
+        "NSCameraUsageDescription": "Sonance requires camera access to scan the pairing QR code from the Sonance PC Companion desktop app.",
         "NSMicrophoneUsageDescription": "Sonance needs microphone access to listen for your voice commands.",
         "NSSpeechRecognitionUsageDescription": "Sonance uses speech recognition to execute PC actions like Turn On, Restart, and Shutdown.",
         "NSBonjourServices": [
@@ -42,7 +43,13 @@
     },
     "plugins": [
       "expo-asset",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Sonance requires camera access to scan the pairing QR code from the Sonance PC Companion desktop app."
+        }
+      ]
     ]
   }
 }

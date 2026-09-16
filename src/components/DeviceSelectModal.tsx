@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { DeviceConfig } from '../types';
-import { Monitor, Plus, Check, X } from 'lucide-react-native';
+import { Monitor, Plus, Check, X, QrCode } from 'lucide-react-native';
 
 interface DeviceSelectModalProps {
   visible: boolean;
@@ -17,6 +17,7 @@ interface DeviceSelectModalProps {
   activeDeviceId: string;
   onSelectDevice: (device: DeviceConfig) => void;
   onAddNewDevice: () => void;
+  onScanQR?: () => void;
   onClose: () => void;
 }
 
@@ -97,20 +98,39 @@ export const DeviceSelectModal: React.FC<DeviceSelectModalProps> = ({
             })}
           </ScrollView>
 
-          <TouchableOpacity
-            style={styles.addBtn}
-            onPress={() => {
-              try {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              } catch {}
-              onClose();
-              onAddNewDevice();
-            }}
-            activeOpacity={0.75}
-          >
-            <Plus size={15} color="#000000" />
-            <Text style={styles.addBtnText}>Add Another PC</Text>
-          </TouchableOpacity>
+          <View style={styles.modalButtonsRow}>
+            {onScanQR && (
+              <TouchableOpacity
+                style={styles.scanQrBtn}
+                onPress={() => {
+                  try {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  } catch {}
+                  onClose();
+                  onScanQR();
+                }}
+                activeOpacity={0.75}
+              >
+                <QrCode size={14} color="#ffffff" />
+                <Text style={styles.scanQrBtnText}>Scan QR</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={[styles.addBtn, onScanQR && { flex: 1, marginTop: 0 }]}
+              onPress={() => {
+                try {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                } catch {}
+                onClose();
+                onAddNewDevice();
+              }}
+              activeOpacity={0.75}
+            >
+              <Plus size={15} color="#000000" />
+              <Text style={styles.addBtnText}>Add PC</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </Modal>
@@ -207,14 +227,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  modalButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 14,
+  },
+  scanQrBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#15151a',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    paddingVertical: 12,
+    borderRadius: 10,
+    gap: 6,
+  },
+  scanQrBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '700',
+  },
   addBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#ffffff',
     paddingVertical: 12,
     borderRadius: 10,
-    marginTop: 14,
     gap: 6,
   },
   addBtnText: {

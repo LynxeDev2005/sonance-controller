@@ -1,0 +1,59 @@
+{
+  "name": "sonance-companion",
+  "version": "1.0.0",
+  "description": "Sonance PC Companion — Standalone Windows Desktop Daemon & Remote Management Agent",
+  "main": "main.js",
+  "author": "LynxeDev",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win",
+    "build:exe": "electron-builder --win nsis",
+    "build:msi": "electron-builder --win msi",
+    "build:all": "electron-builder --win nsis msi"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "electron": "^34.3.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.lynxedev.sonance.companion",
+    "productName": "Sonance PC Companion",
+    "copyright": "Copyright © 2026 LynxeDev",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "msi",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.png",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Sonance PC Companion",
+      "runAfterFinish": true
+    },
+    "msi": {
+      "oneClick": false,
+      "shortcutName": "Sonance PC Companion",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true
+    }
+  }
+}

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sonance PC Companion</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Custom Titlebar -->
+  <div class="titlebar">
+    <div class="titlebar-drag-region">
+      <div class="app-brand">
+        <span class="brand-dot"></span>
+        <span class="brand-name">SONANCE</span>
+        <span class="brand-badge">COMPANION</span>
+      </div>
+    </div>
+    <div class="titlebar-controls">
+      <button id="btn-minimize" class="titlebar-btn" title="Minimize">
+        <svg width="10" height="2" viewBox="0 0 10 2"><rect width="10" height="2" fill="currentColor"/></svg>
+      </button>
+      <button id="btn-close" class="titlebar-btn btn-close" title="Hide to System Tray">
+        <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 1L9 9M9 1L1 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- App Content Container -->
+  <div class="app-container">
+    <!-- Top Status Strip -->
+    <div class="status-strip">
+      <div class="status-indicator">
+        <span class="pulse-dot"></span>
+        <span class="status-text">DAEMON ACTIVE</span>
+      </div>
+      <div class="host-info">
+        <span id="hostname-display">DESKTOP-PC</span> &middot; <span id="port-display">PORT 5005</span>
+      </div>
+    </div>
+
+    <!-- Main Grid: QR Code & Connection Details -->
+    <div class="main-grid">
+      <!-- Left Card: iOS Pairing QR -->
+      <div class="card pairing-card">
+        <div class="card-header">
+          <span class="card-title">QUICK PAIRING</span>
+          <span class="card-tag">iOS APP</span>
+        </div>
+        <div class="qr-box">
+          <img id="qr-image" src="" alt="Pairing QR Code">
+        </div>
+        <p class="qr-hint">Scan with Sonance iOS app to automatically pair this PC</p>
+      </div>
+
+      <!-- Right Card: Network & Security -->
+      <div class="card network-card">
+        <div class="card-header">
+          <span class="card-title">WORKSTATION DETAILS</span>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">Local IPv4</div>
+          <div class="detail-value-group">
+            <span class="detail-value mono" id="ip-display">192.168.100.3</span>
+            <button class="copy-btn" id="btn-copy-ip" title="Copy IP">Copy</button>
+          </div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">MAC Address (WOL)</div>
+          <div class="detail-value-group">
+            <span class="detail-value mono" id="mac-display">9C:6B:00:E2:9C:24</span>
+            <button class="copy-btn" id="btn-copy-mac" title="Copy MAC">Copy</button>
+          </div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">Security PIN</div>
+          <div class="detail-value-group">
+            <input type="password" id="pin-input" class="pin-field mono" value="2005" maxlength="12">
+            <button class="save-pin-btn" id="btn-save-pin">Save</button>
+          </div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">System Memory</div>
+          <span class="detail-value" id="ram-display">Loading...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toggles & Preferences -->
+    <div class="toggles-card">
+      <div class="toggle-item">
+        <label class="switch">
+          <input type="checkbox" id="autostart-toggle" checked>
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">Start Sonance Companion with Windows (Background)</span>
+      </div>
+    </div>
+
+    <!-- Local Power Test Strip -->
+    <div class="test-controls-card">
+      <div class="test-header">
+        <span class="card-title">MANUAL COMMAND TEST</span>
+      </div>
+      <div class="test-buttons">
+        <button class="test-btn" data-action="lock">Lock Workstation</button>
+        <button class="test-btn" data-action="sleep">Sleep PC</button>
+        <button class="test-btn" data-action="restart">Restart PC</button>
+        <button class="test-btn danger" data-action="shutdown">Shutdown PC</button>
+        <button class="test-btn abort" data-action="abort">Abort Pending</button>
+      </div>
+    </div>
+
+    <!-- Live Activity Logs -->
+    <div class="logs-card">
+      <div class="card-header">
+        <span class="card-title">LIVE ACTIVITY FEED</span>
+        <button class="clear-logs-btn" id="btn-clear-logs">Clear</button>
+      </div>
+      <div class="logs-list" id="logs-container">
+        <div class="log-entry system">
+          <span class="log-time">[Init]</span>
+          <span class="log-msg">Sonance PC Companion initialized and listening.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

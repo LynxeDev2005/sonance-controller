@@ -9,6 +9,7 @@ web-build/
 
 # Logs & temp
 *.log
+*.zip
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -16,3 +17,7 @@ yarn-error.log*
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Desktop Electron artifacts
+desktop/node_modules/
+desktop/dist/

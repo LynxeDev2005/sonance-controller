@@ -29,7 +29,9 @@ import {
   Trash2,
   Check,
   Monitor,
+  QrCode,
 } from 'lucide-react-native';
+import { QRScannerModal } from '../components/QRScannerModal';
 
 interface SettingsScreenProps {
   devices: DeviceConfig[];
@@ -64,9 +66,24 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     initialNew ? '5005' : activeDevice.port.toString()
   );
   const [pin, setPin] = useState(initialNew ? '1234' : activeDevice.pin);
+  const [qrModalVisible, setQrModalVisible] = useState(false);
 
   const [isTestingPing, setIsTestingPing] = useState(false);
   const [isTestingWol, setIsTestingWol] = useState(false);
+
+  const handleQrScanSuccess = (scannedDevice: DeviceConfig) => {
+    setName(scannedDevice.name);
+    setIpAddress(scannedDevice.ipAddress);
+    setMacAddress(scannedDevice.macAddress);
+    setBroadcastAddress(scannedDevice.broadcastAddress);
+    setPort(scannedDevice.port.toString());
+    setPin(scannedDevice.pin);
+
+    Alert.alert(
+      'PC Paired! ⚡',
+      `Auto-filled configuration for "${scannedDevice.name}" (${scannedDevice.ipAddress}). Tap "Save" to apply.`
+    );
+  };
 
   const handleSelectDeviceToEdit = (dev: DeviceConfig) => {
     setSelectedId(dev.id);
@@ -251,10 +268,26 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           <ArrowLeft size={16} color="#ffffff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>MANAGE PCS</Text>
-        <TouchableOpacity style={styles.saveHeaderBtn} onPress={handleSave}>
-          <Save size={14} color="#000000" />
-          <Text style={styles.saveHeaderText}>Save</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRightRow}>
+          <TouchableOpacity
+            style={styles.scanHeaderBtn}
+            onPress={() => {
+              try {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              } catch {}
+              setQrModalVisible(true);
+            }}
+            activeOpacity={0.75}
+          >
+            <QrCode size={13} color="#ffffff" />
+            <Text style={styles.scanHeaderText}>Scan QR</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.saveHeaderBtn} onPress={handleSave}>
+            <Save size={14} color="#000000" />
+            <Text style={styles.saveHeaderText}>Save</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -266,13 +299,28 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         <View style={styles.card}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.cardSectionTitle}>SAVED COMPUTERS</Text>
-            <TouchableOpacity
-              style={styles.addMiniBtn}
-              onPress={handleAddNewDeviceForm}
-            >
-              <Plus size={13} color="#ffffff" />
-              <Text style={styles.addMiniText}>Add PC</Text>
-            </TouchableOpacity>
+            <View style={styles.miniButtonsRow}>
+              <TouchableOpacity
+                style={styles.scanMiniBtn}
+                onPress={() => {
+                  try {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  } catch {}
+                  setQrModalVisible(true);
+                }}
+              >
+                <QrCode size={12} color="#ffffff" />
+                <Text style={styles.scanMiniText}>Scan QR</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.addMiniBtn}
+                onPress={handleAddNewDeviceForm}
+              >
+                <Plus size={13} color="#ffffff" />
+                <Text style={styles.addMiniText}>Add PC</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <ScrollView
@@ -326,6 +374,28 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               </TouchableOpacity>
             )}
           </View>
+
+          {/* Quick QR Auto-Pairing Button */}
+          <TouchableOpacity
+            style={styles.scanQrCardBtn}
+            onPress={() => {
+              try {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              } catch {}
+              setQrModalVisible(true);
+            }}
+            activeOpacity={0.8}
+          >
+            <View style={styles.scanQrIconWell}>
+              <QrCode size={18} color="#000000" />
+            </View>
+            <View style={styles.scanQrTextCol}>
+              <Text style={styles.scanQrCardTitle}>Scan PC Companion QR</Text>
+              <Text style={styles.scanQrCardSubtitle}>
+                Auto-fill IP, MAC & PIN from Desktop App
+              </Text>
+            </View>
+          </TouchableOpacity>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>PC Nickname</Text>
@@ -446,6 +516,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </View>
         </View>
       </ScrollView>
+
+      {/* QR Code Scanner Viewfinder Modal */}
+      <QRScannerModal
+        visible={qrModalVisible}
+        onClose={() => setQrModalVisible(false)}
+        onScanSuccess={handleQrScanSuccess}
+      />
     </SafeAreaView>
   );
 };
@@ -477,6 +554,27 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#ffffff',
     letterSpacing: 1,
+  },
+  headerRightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  scanHeaderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#15151a',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+  },
+  scanHeaderText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '700',
   },
   saveHeaderBtn: {
     flexDirection: 'row',
@@ -523,6 +621,68 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  miniButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  cardSectionTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#71717a',
+    letterSpacing: 1,
+  },
+  scanMiniBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#0c0c0f',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  scanMiniText: {
+    color: '#d4d4d8',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  scanQrCardBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    padding: 12,
+    shadowColor: '#ffffff',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  scanQrIconWell: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#f4f4f5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scanQrTextCol: {
+    flex: 1,
+    gap: 2,
+  },
+  scanQrCardTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#000000',
+  },
+  scanQrCardSubtitle: {
+    fontSize: 10.5,
+    color: '#52525b',
+    fontWeight: '500',
   },
   cardSectionTitle: {
     fontSize: 10,
