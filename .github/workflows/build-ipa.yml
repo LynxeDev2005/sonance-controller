@@ -92,6 +92,17 @@ jobs:
           echo "Building ExpoModulesJSI xcframework explicitly..."
           cd node_modules/expo-modules-jsi/apple
           PODS_ROOT="$GITHUB_WORKSPACE/ios/Pods" bash scripts/build-xcframework.sh --clean
+          cd "$GITHUB_WORKSPACE"
+          
+          echo "Syncing built xcframework into ios/Pods and build intermediates..."
+          mkdir -p ios/Pods/ExpoModulesJSI/ExpoModulesJSI.xcframework
+          cp -R node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/* ios/Pods/ExpoModulesJSI/ExpoModulesJSI.xcframework/
+          
+          mkdir -p build/Build/Products/Release-iphoneos/XCFrameworkIntermediates/ExpoModulesJSI/ExpoModulesJSI.framework
+          cp -R node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/ios-arm64/ExpoModulesJSI.framework/* build/Build/Products/Release-iphoneos/XCFrameworkIntermediates/ExpoModulesJSI/ExpoModulesJSI.framework/
+          
+          echo "✓ Successfully prepared ExpoModulesJSI XCFramework artifacts"
+
 
       - name: Resolve Xcode scheme and target paths
         shell: bash

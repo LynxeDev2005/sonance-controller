@@ -28,10 +28,12 @@ if (fs.existsSync(packageSwiftPath)) {
     'swiftLanguageModes: [.v6]',
     'swiftLanguageModes: [.v5]'
   );
-  content = content.replace(
-    '"-no-verify-emitted-module-interface",',
-    '"-no-verify-emitted-module-interface",\n          "-strict-concurrency=minimal",'
-  );
+  if (!content.includes('"-strict-concurrency=minimal"')) {
+    content = content.replace(
+      '"-no-verify-emitted-module-interface",',
+      '"-no-verify-emitted-module-interface",\n          "-strict-concurrency=minimal",'
+    );
+  }
   fs.writeFileSync(packageSwiftPath, content, 'utf8');
   console.log('✓ Successfully patched expo-modules-jsi/apple/Package.swift');
 }
