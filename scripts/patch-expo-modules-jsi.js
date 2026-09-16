@@ -36,7 +36,7 @@ if (fs.existsSync(packageSwiftPath)) {
   console.log('✓ Successfully patched expo-modules-jsi/apple/Package.swift');
 }
 
-// 2. Patch ExpoModulesJSI.podspec to make script phase non-blocking
+// 2. Patch ExpoModulesJSI.podspec
 const podspecPath = path.join(
   __dirname,
   '..',
@@ -50,7 +50,7 @@ if (fs.existsSync(podspecPath)) {
   let content = fs.readFileSync(podspecPath, 'utf8');
   content = content.replace(
     ':script => \'"${PODS_TARGET_SRCROOT}/scripts/build-xcframework.sh"\'',
-    ':script => \'bash "${PODS_TARGET_SRCROOT}/scripts/build-xcframework.sh" || true\''
+    ':script => \'bash "${PODS_TARGET_SRCROOT}/scripts/build-xcframework.sh"\''
   );
   fs.writeFileSync(podspecPath, content, 'utf8');
   console.log('✓ Successfully patched expo-modules-jsi/apple/ExpoModulesJSI.podspec');
@@ -73,6 +73,10 @@ if (fs.existsSync(buildScriptPath)) {
   scriptContent = scriptContent.replace(
     'cat "$file"',
     'cat "$file" 2>/dev/null || true'
+  );
+  scriptContent = scriptContent.replace(
+    'local env_args=(PATH="$PATH" HOME="$HOME" PODS_ROOT="$PODS_ROOT" RN_ROOT="$RN_ROOT")',
+    'local dev_dir="${DEVELOPER_DIR:-$(xcode-select -p 2>/dev/null || true)}"\n  local env_args=(PATH="$PATH" HOME="$HOME" PODS_ROOT="$PODS_ROOT" RN_ROOT="$RN_ROOT" DEVELOPER_DIR="$dev_dir" TMPDIR="${TMPDIR:-/tmp}" USER="${USER:-runner}")'
   );
   if (!scriptContent.includes('CODE_SIGNING_ALLOWED=NO')) {
     scriptContent = scriptContent.replace(
