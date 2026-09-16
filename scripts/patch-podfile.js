@@ -22,14 +22,39 @@ if (fs.existsSync(podfilePath)) {
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.4'
         config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
         
+        extra_frameworks = [
+          '$(inherited)',
+          '$(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesCore',
+          '$(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesJSI',
+          '$(PODS_CONFIGURATION_BUILD_DIR)/ExpoModulesJSI',
+          '$(PODS_ROOT)/ExpoModulesJSI/ExpoModulesJSI.xcframework/ios-arm64',
+          '$(PODS_ROOT)/ExpoModulesJSI/Products/ExpoModulesJSI.xcframework/ios-arm64',
+          '$(PODS_ROOT)/../../node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/ios-arm64'
+        ]
         framework_paths = config.build_settings['FRAMEWORK_SEARCH_PATHS']
         if framework_paths.nil?
-          config.build_settings['FRAMEWORK_SEARCH_PATHS'] = ['$(inherited)', '$(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesCore', '$(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesJSI']
+          config.build_settings['FRAMEWORK_SEARCH_PATHS'] = extra_frameworks
         elsif framework_paths.is_a?(Array)
-          framework_paths << '$(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesCore' unless framework_paths.include?('$(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesCore')
-          framework_paths << '$(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesJSI' unless framework_paths.include?('$(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesJSI')
+          extra_frameworks.each { |p| framework_paths << p unless framework_paths.include?(p) }
         elsif framework_paths.is_a?(String)
-          config.build_settings['FRAMEWORK_SEARCH_PATHS'] = "#{framework_paths} $(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesCore $(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesJSI"
+          config.build_settings['FRAMEWORK_SEARCH_PATHS'] = "#{framework_paths} #{extra_frameworks.join(' ')}"
+        end
+
+        extra_includes = [
+          '$(inherited)',
+          '$(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesCore/ExpoModulesCore.framework/Modules',
+          '$(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesJSI/ExpoModulesJSI.framework/Modules',
+          '$(PODS_CONFIGURATION_BUILD_DIR)/ExpoModulesJSI/ExpoModulesJSI.framework/Modules',
+          '$(PODS_ROOT)/ExpoModulesJSI/ExpoModulesJSI.xcframework/ios-arm64/ExpoModulesJSI.framework/Modules',
+          '$(PODS_ROOT)/../../node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/ios-arm64/ExpoModulesJSI.framework/Modules'
+        ]
+        swift_includes = config.build_settings['SWIFT_INCLUDE_PATHS']
+        if swift_includes.nil?
+          config.build_settings['SWIFT_INCLUDE_PATHS'] = extra_includes
+        elsif swift_includes.is_a?(Array)
+          extra_includes.each { |p| swift_includes << p unless swift_includes.include?(p) }
+        elsif swift_includes.is_a?(String)
+          config.build_settings['SWIFT_INCLUDE_PATHS'] = "#{swift_includes} #{extra_includes.join(' ')}"
         end
       end
     end

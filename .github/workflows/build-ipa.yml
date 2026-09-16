@@ -98,10 +98,19 @@ jobs:
           mkdir -p ios/Pods/ExpoModulesJSI/ExpoModulesJSI.xcframework
           cp -R node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/* ios/Pods/ExpoModulesJSI/ExpoModulesJSI.xcframework/
           
-          mkdir -p build/Build/Products/Release-iphoneos/XCFrameworkIntermediates/ExpoModulesJSI/ExpoModulesJSI.framework
-          cp -R node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/ios-arm64/ExpoModulesJSI.framework/* build/Build/Products/Release-iphoneos/XCFrameworkIntermediates/ExpoModulesJSI/ExpoModulesJSI.framework/
-          
-          echo "✓ Successfully prepared ExpoModulesJSI XCFramework artifacts"
+          mkdir -p ios/Pods/ExpoModulesJSI/Products/ExpoModulesJSI.xcframework
+          cp -R node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/* ios/Pods/ExpoModulesJSI/Products/ExpoModulesJSI.xcframework/
+
+          mkdir -p build/Build/Products/Release-iphoneos/XCFrameworkIntermediates/ExpoModulesJSI
+          cp -R node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/ios-arm64/ExpoModulesJSI.framework build/Build/Products/Release-iphoneos/XCFrameworkIntermediates/ExpoModulesJSI/
+
+          mkdir -p build/Build/Products/Release-iphoneos/ExpoModulesJSI
+          cp -R node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/ios-arm64/ExpoModulesJSI.framework build/Build/Products/Release-iphoneos/ExpoModulesJSI/
+
+          mkdir -p ios/Pods/ExpoModulesCore/ExpoModulesCore.xcframework/ios-arm64/ExpoModulesCore.framework/Frameworks
+          cp -R node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/ios-arm64/ExpoModulesJSI.framework ios/Pods/ExpoModulesCore/ExpoModulesCore.xcframework/ios-arm64/ExpoModulesCore.framework/Frameworks/ 2>/dev/null || true
+
+          echo "✓ Successfully prepared ExpoModulesJSI XCFramework artifacts across all pod and intermediate directories"
 
 
       - name: Resolve Xcode scheme and target paths

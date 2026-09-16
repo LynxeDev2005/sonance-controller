@@ -87,6 +87,32 @@ if (fs.existsSync(buildScriptPath)) {
     );
     scriptContent = scriptContent.replace('-quiet \\\n', '');
   }
+
+  // Ensure built framework is automatically synced to all intermediate and pod locations
+  if (!scriptContent.includes('SYNC_DESTINATIONS')) {
+    const syncCode = `
+  write_xcframework_plist "$XCFRAMEWORK_PATH" "$PACKAGE_NAME"
+
+  # Auto-sync built framework to all CocoaPods intermediate and search directories
+  for dest in \\
+    "\${PODS_CONFIGURATION_BUILD_DIR}/XCFrameworkIntermediates/ExpoModulesJSI" \\
+    "\${CONFIGURATION_BUILD_DIR}/XCFrameworkIntermediates/ExpoModulesJSI" \\
+    "\${CONFIGURATION_BUILD_DIR}/ExpoModulesJSI" \\
+    "\${PODS_ROOT}/ExpoModulesJSI/ExpoModulesJSI.xcframework" \\
+    "\${PODS_ROOT}/ExpoModulesJSI/Products/ExpoModulesJSI.xcframework"; do
+    if [[ -n "$dest" ]]; then
+      mkdir -p "$dest"
+      cp -R "\${XCFRAMEWORK_PATH}/ios-arm64/ExpoModulesJSI.framework" "$dest/" 2>/dev/null || true
+      cp -R "\${XCFRAMEWORK_PATH}/"* "$dest/" 2>/dev/null || true
+    fi
+  done
+`;
+    scriptContent = scriptContent.replace(
+      'write_xcframework_plist "$XCFRAMEWORK_PATH" "$PACKAGE_NAME"',
+      syncCode
+    );
+  }
+
   fs.writeFileSync(buildScriptPath, scriptContent, 'utf8');
   console.log('✓ Successfully patched expo-modules-jsi/apple/scripts/build-xcframework.sh');
 }
