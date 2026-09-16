@@ -115,6 +115,9 @@ jobs:
 
           echo "✓ Successfully prepared ExpoModulesJSI XCFramework artifacts across all pod and intermediate directories"
 
+      - name: Apply swiftinterface & xcconfig patches to Pods and intermediates
+        run: node scripts/patch-expo-modules-jsi.js
+
 
       - name: Resolve Xcode scheme and target paths
         shell: bash

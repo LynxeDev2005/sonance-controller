@@ -275,7 +275,7 @@ if (fs.existsSync(expoModulesCoreSwiftPath)) {
   console.log('✓ Successfully patched ExpoModulesCore.swift');
 }
 
-// 8. Patch .swiftinterface files in directories and inside prebuild .tar.gz archives
+// 8. Patch .swiftinterface files and remove private interfaces across prebuilds and Pods
 function patchSwiftInterfacesInDir(dir) {
   let count = 0;
   function walk(currentDir) {
@@ -285,14 +285,25 @@ function patchSwiftInterfacesInDir(dir) {
       const fullPath = path.join(currentDir, entry.name);
       if (entry.isDirectory()) {
         walk(fullPath);
-      } else if (entry.isFile() && entry.name.endsWith('.swiftinterface')) {
-        let content = fs.readFileSync(fullPath, 'utf8');
-        const original = content;
-        content = content.replace(/Apple Swift version 6\.[3-9]\.[0-9.]+/g, 'Apple Swift version 6.0');
-        content = content.replace(/-interface-compiler-version 6\.[3-9]\.[0-9.]+/g, '-interface-compiler-version 6.0');
-        if (content !== original) {
-          fs.writeFileSync(fullPath, content, 'utf8');
-          count++;
+      } else if (entry.isFile()) {
+        // Strip private and package swiftinterfaces that reference internal/unresolved modules
+        if (entry.name.endsWith('.private.swiftinterface') || entry.name.endsWith('.package.swiftinterface')) {
+          try {
+            fs.unlinkSync(fullPath);
+            count++;
+          } catch {}
+          continue;
+        }
+
+        if (entry.name.endsWith('.swiftinterface')) {
+          let content = fs.readFileSync(fullPath, 'utf8');
+          const original = content;
+          content = content.replace(/Apple Swift version 6\.[3-9]\.[0-9.]+/g, 'Apple Swift version 6.0');
+          content = content.replace(/-interface-compiler-version 6\.[3-9]\.[0-9.]+/g, '-interface-compiler-version 6.0');
+          if (content !== original) {
+            fs.writeFileSync(fullPath, content, 'utf8');
+            count++;
+          }
         }
       }
     }
@@ -345,6 +356,62 @@ if (fs.existsSync(nodeModulesDir)) {
   patchAllPrebuilds(nodeModulesDir);
 }
 
+// 9. Patch Target Support Files xcconfig files directly
+function patchTargetSupportXcconfigs(podsDir) {
+  const targetSupportDir = path.join(podsDir, 'Target Support Files');
+  if (!fs.existsSync(targetSupportDir)) return;
+
+  const extraFw = [
+    '${PODS_CONFIGURATION_BUILD_DIR}/XCFrameworkIntermediates/ExpoModulesCore',
+    '${PODS_CONFIGURATION_BUILD_DIR}/XCFrameworkIntermediates/ExpoModulesJSI',
+    '${PODS_CONFIGURATION_BUILD_DIR}/ExpoModulesJSI',
+    '${PODS_ROOT}/ExpoModulesJSI/ExpoModulesJSI.xcframework/ios-arm64',
+    '${PODS_ROOT}/ExpoModulesJSI/Products/ExpoModulesJSI.xcframework/ios-arm64',
+    '${PODS_ROOT}/../../node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/ios-arm64'
+  ];
+  const fwFlags = extraFw.map((p) => `"${p}"`).join(' ');
+
+  const extraIncludes = [
+    '${PODS_CONFIGURATION_BUILD_DIR}/ExpoModulesCore',
+    '${PODS_CONFIGURATION_BUILD_DIR}/ExpoModulesJSI',
+    '${PODS_ROOT}/Headers/Public/ExpoModulesCore',
+    '${PODS_ROOT}/Headers/Public/ExpoModulesJSI'
+  ];
+  const incFlags = extraIncludes.map((p) => `"${p}"`).join(' ');
+
+  let patched = 0;
+  function walk(currentDir) {
+    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath);
+      } else if (entry.isFile() && entry.name.endsWith('.xcconfig')) {
+        let content = fs.readFileSync(fullPath, 'utf8');
+        let modified = false;
+
+        if (!content.includes('ExpoModulesJSI.xcframework')) {
+          content += `\nFRAMEWORK_SEARCH_PATHS = $(inherited) ${fwFlags}\n`;
+          content += `SWIFT_INCLUDE_PATHS = $(inherited) ${incFlags}\n`;
+          content += `SWIFT_VERSION = 5.0\n`;
+          content += `SWIFT_STRICT_CONCURRENCY = off\n`;
+          content += `ENABLE_USER_SCRIPT_SANDBOXING = NO\n`;
+          modified = true;
+        }
+
+        if (modified) {
+          fs.writeFileSync(fullPath, content, 'utf8');
+          patched++;
+        }
+      }
+    }
+  }
+  walk(targetSupportDir);
+  if (patched > 0) {
+    console.log(`✓ Injected search paths into ${patched} Target Support xcconfig files`);
+  }
+}
+
 // Also patch any existing ios/Pods directory if present
 const podsDir = path.join(__dirname, '..', 'ios', 'Pods');
 if (fs.existsSync(podsDir)) {
@@ -352,4 +419,5 @@ if (fs.existsSync(podsDir)) {
   if (podsPatched > 0) {
     console.log(`✓ Patched ${podsPatched} swiftinterface files in ios/Pods`);
   }
+  patchTargetSupportXcconfigs(podsDir);
 }
