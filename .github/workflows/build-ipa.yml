@@ -52,7 +52,7 @@ jobs:
           cache: npm
 
       - name: Install JavaScript dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Apply Swift compatibility patches
         run: node scripts/patch-expo-modules-jsi.js
