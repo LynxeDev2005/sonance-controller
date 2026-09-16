@@ -23,8 +23,8 @@ if (fs.existsSync(podfilePath)) {
         config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
         if target.name == 'PcControlNative'
           config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= ['$(inherited)']
-          config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '"${PODS_CONFIGURATION_BUILD_DIR}/XCFrameworkIntermediates/ExpoModulesCore"'
-          config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '"${PODS_CONFIGURATION_BUILD_DIR}/XCFrameworkIntermediates/ExpoModulesJSI"'
+          config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '"$(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesCore"'
+          config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '"$(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates/ExpoModulesJSI"'
         end
       end
     end
