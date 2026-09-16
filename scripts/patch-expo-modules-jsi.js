@@ -34,6 +34,12 @@ if (fs.existsSync(packageSwiftPath)) {
     '"-strict-concurrency=minimal",\n          ',
     ''
   );
+  if (!content.includes('"-enable-bare-slash-regex"')) {
+    content = content.replace(
+      '"-no-verify-emitted-module-interface",',
+      '"-no-verify-emitted-module-interface",\n          "-enable-bare-slash-regex",'
+    );
+  }
   fs.writeFileSync(packageSwiftPath, content, 'utf8');
   console.log('✓ Successfully patched expo-modules-jsi/apple/Package.swift');
 }
@@ -252,8 +258,14 @@ if (fs.existsSync(jsRuntimePath)) {
     'nonisolated(unsafe) let thisPtr = thisPtr\n    nonisolated(unsafe) let argumentsPtr = argumentsPtr\n    nonisolated(unsafe) let resultPtr = resultPtr\n\n    return withGuaranteedContext(context) { (context: UnownedThisHostFunctionContext, runtime) in'
   );
 
+  // Patch regex literal for Swift 5 / bare slash compatibility
+  content = content.replace(
+    'if name.wholeMatch(of: /^[a-zA-Z_$][a-zA-Z0-9_$]*$/) == nil {',
+    'let regex = try! Regex("^[a-zA-Z_$][a-zA-Z0-9_$]*$")\n    if name.wholeMatch(of: regex) == nil {'
+  );
+
   fs.writeFileSync(jsRuntimePath, content, 'utf8');
-  console.log('✓ Successfully patched JavaScriptRuntime.swift pointer isolation');
+  console.log('✓ Successfully patched JavaScriptRuntime.swift pointer isolation & regex');
 }
 
 // 7. Patch ExpoModulesCore.swift for Swift 5 / 6 syntax compatibility
