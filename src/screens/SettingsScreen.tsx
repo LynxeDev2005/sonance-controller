@@ -27,7 +27,6 @@ import {
   Radio,
   Plus,
   Trash2,
-  Check,
   Monitor,
   QrCode,
 } from 'lucide-react-native';
@@ -35,8 +34,8 @@ import { QRScannerModal } from '../components/QRScannerModal';
 
 interface SettingsScreenProps {
   devices: DeviceConfig[];
-  activeDevice: DeviceConfig;
-  onUpdateDevices: (devices: DeviceConfig[], active: DeviceConfig) => void;
+  activeDevice: DeviceConfig | null;
+  onUpdateDevices: (devices: DeviceConfig[], active: DeviceConfig | null) => void;
   onBack: () => void;
   initialNew?: boolean;
 }
@@ -48,30 +47,33 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onBack,
   initialNew = false,
 }) => {
+  const isCreatingNew = initialNew || !activeDevice || devices.length === 0;
+
   const [selectedId, setSelectedId] = useState(
-    initialNew ? 'new' : activeDevice.id
+    isCreatingNew ? 'new' : activeDevice.id
   );
 
-  const [name, setName] = useState(initialNew ? 'New PC' : activeDevice.name);
+  const [name, setName] = useState(isCreatingNew ? '' : activeDevice.name);
   const [ipAddress, setIpAddress] = useState(
-    initialNew ? '192.168.1.100' : activeDevice.ipAddress
+    isCreatingNew ? '' : activeDevice.ipAddress
   );
   const [macAddress, setMacAddress] = useState(
-    initialNew ? '' : activeDevice.macAddress
+    isCreatingNew ? '' : activeDevice.macAddress
   );
   const [broadcastAddress, setBroadcastAddress] = useState(
-    initialNew ? '192.168.1.255' : activeDevice.broadcastAddress
+    isCreatingNew ? '' : activeDevice.broadcastAddress
   );
   const [port, setPort] = useState(
-    initialNew ? '5005' : activeDevice.port.toString()
+    isCreatingNew ? '5005' : activeDevice.port.toString()
   );
-  const [pin, setPin] = useState(initialNew ? '1234' : activeDevice.pin);
+  const [pin, setPin] = useState(isCreatingNew ? '' : activeDevice.pin);
   const [qrModalVisible, setQrModalVisible] = useState(false);
 
   const [isTestingPing, setIsTestingPing] = useState(false);
   const [isTestingWol, setIsTestingWol] = useState(false);
 
   const handleQrScanSuccess = (scannedDevice: DeviceConfig) => {
+    setSelectedId(scannedDevice.id);
     setName(scannedDevice.name);
     setIpAddress(scannedDevice.ipAddress);
     setMacAddress(scannedDevice.macAddress);
@@ -99,19 +101,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     const newId = `pc-${Date.now()}`;
     setSelectedId(newId);
     setName(`PC #${devices.length + 1}`);
-    setIpAddress('192.168.1.100');
+    setIpAddress('');
     setMacAddress('');
-    setBroadcastAddress('192.168.1.255');
+    setBroadcastAddress('');
     setPort('5005');
-    setPin('1234');
+    setPin('');
   };
 
   const handleDeleteDevice = (idToDelete: string) => {
-    if (devices.length <= 1) {
-      Alert.alert('Cannot Delete', 'You must have at least one PC configured.');
-      return;
-    }
-
     Alert.alert('Delete PC', 'Are you sure you want to remove this PC profile?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -120,11 +117,25 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         onPress: async () => {
           const filtered = devices.filter((d) => d.id !== idToDelete);
           const newActive =
-            activeDevice.id === idToDelete ? filtered[0] : activeDevice;
+            filtered.length > 0
+              ? activeDevice?.id === idToDelete
+                ? filtered[0]
+                : activeDevice
+              : null;
           await saveAllDevices(filtered);
           await saveActiveDevice(newActive);
           onUpdateDevices(filtered, newActive);
-          handleSelectDeviceToEdit(newActive);
+          if (filtered.length > 0 && newActive) {
+            handleSelectDeviceToEdit(newActive);
+          } else {
+            setSelectedId('new');
+            setName('');
+            setIpAddress('');
+            setMacAddress('');
+            setBroadcastAddress('');
+            setPort('5005');
+            setPin('');
+          }
         },
       },
     ]);
@@ -138,7 +149,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       } catch {}
     } else {
-      Alert.alert('Invalid IP', 'Enter a valid IPv4 address first (e.g. 192.168.1.100).');
+      Alert.alert('Invalid IP', 'Enter a valid IPv4 address first (e.g. 192.168.1.50).');
     }
   };
 
@@ -180,7 +191,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const handleTestWol = async () => {
     const formattedMac = sanitizeMacAddress(macAddress);
     if (!isValidMacAddress(formattedMac)) {
-      Alert.alert('Invalid MAC', 'Enter a valid 12-character MAC address (e.g. 9C:6B:00:E2:9C:24).');
+      Alert.alert('Invalid MAC', 'Enter a valid 12-character MAC address (e.g. AA:BB:CC:DD:EE:FF).');
       return;
     }
 
@@ -268,26 +279,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           <ArrowLeft size={16} color="#ffffff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>MANAGE PCS</Text>
-        <View style={styles.headerRightRow}>
-          <TouchableOpacity
-            style={styles.scanHeaderBtn}
-            onPress={() => {
-              try {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              } catch {}
-              setQrModalVisible(true);
-            }}
-            activeOpacity={0.75}
-          >
-            <QrCode size={13} color="#ffffff" />
-            <Text style={styles.scanHeaderText}>Scan QR</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.saveHeaderBtn} onPress={handleSave}>
-            <Save size={14} color="#000000" />
-            <Text style={styles.saveHeaderText}>Save</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.saveHeaderBtn} onPress={handleSave} activeOpacity={0.85}>
+          <Save size={14} color="#000000" />
+          <Text style={styles.saveHeaderText}>Save</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -299,75 +294,68 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         <View style={styles.card}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.cardSectionTitle}>SAVED COMPUTERS</Text>
-            <View style={styles.miniButtonsRow}>
-              <TouchableOpacity
-                style={styles.scanMiniBtn}
-                onPress={() => {
-                  try {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  } catch {}
-                  setQrModalVisible(true);
-                }}
-              >
-                <QrCode size={12} color="#ffffff" />
-                <Text style={styles.scanMiniText}>Scan QR</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.addMiniBtn}
-                onPress={handleAddNewDeviceForm}
-              >
-                <Plus size={13} color="#ffffff" />
-                <Text style={styles.addMiniText}>Add PC</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={styles.addMiniBtn}
+              onPress={handleAddNewDeviceForm}
+              activeOpacity={0.75}
+            >
+              <Plus size={13} color="#ffffff" />
+              <Text style={styles.addMiniText}>Add PC</Text>
+            </TouchableOpacity>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.pcTabsContainer}
-          >
-            {devices.map((d) => {
-              const isEditing = d.id === selectedId;
-              const isActive = d.id === activeDevice.id;
-              return (
-                <TouchableOpacity
-                  key={d.id}
-                  style={[
-                    styles.pcTab,
-                    isEditing && styles.pcTabEditing,
-                    isActive && styles.pcTabActive,
-                  ]}
-                  onPress={() => handleSelectDeviceToEdit(d)}
-                  activeOpacity={0.7}
-                >
-                  <Monitor
-                    size={14}
-                    color={isEditing || isActive ? '#000000' : '#ffffff'}
-                  />
-                  <Text
+          {devices.length === 0 ? (
+            <View style={styles.noSavedView}>
+              <Text style={styles.noSavedText}>No computers saved yet. Tap "Add PC" or scan QR below.</Text>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.pcTabsContainer}
+            >
+              {devices.map((d) => {
+                const isEditing = d.id === selectedId;
+                const isActive = activeDevice && d.id === activeDevice.id;
+                return (
+                  <TouchableOpacity
+                    key={d.id}
                     style={[
-                      styles.pcTabText,
-                      (isEditing || isActive) && styles.pcTabTextActive,
+                      styles.pcTab,
+                      isEditing && styles.pcTabEditing,
+                      isActive && styles.pcTabActive,
                     ]}
+                    onPress={() => handleSelectDeviceToEdit(d)}
+                    activeOpacity={0.7}
                   >
-                    {d.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+                    <Monitor
+                      size={14}
+                      color={isEditing || isActive ? '#000000' : '#ffffff'}
+                    />
+                    <Text
+                      style={[
+                        styles.pcTabText,
+                        (isEditing || isActive) && styles.pcTabTextActive,
+                      ]}
+                    >
+                      {d.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
         </View>
 
         {/* Device Profile Fields */}
         <View style={styles.card}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.cardSectionTitle}>CONFIGURATION</Text>
-            {devices.length > 1 && selectedId !== 'new' && (
+            {devices.length > 0 && selectedId !== 'new' && (
               <TouchableOpacity
                 onPress={() => handleDeleteDevice(selectedId)}
                 style={styles.deleteBtn}
+                activeOpacity={0.7}
               >
                 <Trash2 size={13} color="#71717a" />
                 <Text style={styles.deleteText}>Delete</Text>
@@ -375,7 +363,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             )}
           </View>
 
-          {/* Quick QR Auto-Pairing Button */}
+          {/* Single Consolidated Quick QR Auto-Pairing Card Button */}
           <TouchableOpacity
             style={styles.scanQrCardBtn}
             onPress={() => {
@@ -403,7 +391,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               style={styles.input}
               value={name}
               onChangeText={setName}
-              placeholder="e.g. Gaming Rig, Office PC"
+              placeholder="e.g. Workstation, Desktop"
               placeholderTextColor="#52525b"
             />
           </View>
@@ -414,7 +402,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               style={styles.input}
               value={ipAddress}
               onChangeText={setIpAddress}
-              placeholder="192.168.1.100"
+              placeholder="e.g. 192.168.1.50"
               placeholderTextColor="#52525b"
               autoCapitalize="none"
               keyboardType="numeric"
@@ -427,7 +415,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               style={styles.input}
               value={macAddress}
               onChangeText={(text) => setMacAddress(sanitizeMacAddress(text))}
-              placeholder="9C:6B:00:E2:9C:24"
+              placeholder="e.g. AA:BB:CC:DD:EE:FF"
               placeholderTextColor="#52525b"
               autoCapitalize="characters"
             />
@@ -444,7 +432,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               style={styles.input}
               value={broadcastAddress}
               onChangeText={setBroadcastAddress}
-              placeholder="192.168.1.255"
+              placeholder="e.g. 192.168.1.255"
               placeholderTextColor="#52525b"
               autoCapitalize="none"
             />
@@ -469,7 +457,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 style={styles.input}
                 value={pin}
                 onChangeText={setPin}
-                placeholder="1234"
+                placeholder="Optional PIN"
                 placeholderTextColor="#52525b"
                 secureTextEntry={false}
               />
@@ -555,34 +543,13 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     letterSpacing: 1,
   },
-  headerRightRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  scanHeaderBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#15151a',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-  },
-  scanHeaderText: {
-    color: '#ffffff',
-    fontSize: 11,
-    fontWeight: '700',
-  },
   saveHeaderBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     backgroundColor: '#ffffff',
     paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     borderRadius: 12,
     shadowColor: '#ffffff',
     shadowOffset: { width: 0, height: 2 },
@@ -622,68 +589,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  miniButtonsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  cardSectionTitle: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#71717a',
-    letterSpacing: 1,
-  },
-  scanMiniBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#0c0c0f',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  scanMiniText: {
-    color: '#d4d4d8',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  scanQrCardBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: '#ffffff',
-    borderRadius: 14,
-    padding: 12,
-    shadowColor: '#ffffff',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  scanQrIconWell: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: '#f4f4f5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scanQrTextCol: {
-    flex: 1,
-    gap: 2,
-  },
-  scanQrCardTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#000000',
-  },
-  scanQrCardSubtitle: {
-    fontSize: 10.5,
-    color: '#52525b',
-    fontWeight: '500',
-  },
   cardSectionTitle: {
     fontSize: 10,
     fontWeight: '800',
@@ -695,7 +600,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     backgroundColor: '#0c0c0f',
-    paddingVertical: 4,
+    paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 8,
     borderWidth: 1,
@@ -705,6 +610,15 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 11,
     fontWeight: '700',
+  },
+  noSavedView: {
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  noSavedText: {
+    color: '#71717a',
+    fontSize: 12,
+    fontWeight: '500',
   },
   pcTabsContainer: {
     flexDirection: 'row',
@@ -745,6 +659,41 @@ const styles = StyleSheet.create({
     color: '#71717a',
     fontSize: 11,
     fontWeight: '600',
+  },
+  scanQrCardBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    padding: 12,
+    shadowColor: '#ffffff',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  scanQrIconWell: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#f4f4f5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scanQrTextCol: {
+    flex: 1,
+    gap: 2,
+  },
+  scanQrCardTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#000000',
+  },
+  scanQrCardSubtitle: {
+    fontSize: 10.5,
+    color: '#52525b',
+    fontWeight: '500',
   },
   inputGroup: {
     gap: 6,

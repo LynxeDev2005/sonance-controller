@@ -16,8 +16,8 @@ type ScreenType = 'dashboard' | 'settings' | 'siri_guide';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('dashboard');
-  const [devices, setDevices] = useState<DeviceConfig[]>([DEFAULT_DEVICE]);
-  const [activeDevice, setActiveDevice] = useState<DeviceConfig>(DEFAULT_DEVICE);
+  const [devices, setDevices] = useState<DeviceConfig[]>([]);
+  const [activeDevice, setActiveDevice] = useState<DeviceConfig | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -27,7 +27,11 @@ export default function App() {
         const storedAll = await getAllDevices();
         const storedActive = await getActiveDevice();
         setDevices(storedAll);
-        setActiveDevice(storedActive);
+        if (storedAll.length > 0) {
+          setActiveDevice(storedActive && storedAll.some(d => d.id === storedActive.id) ? storedActive : storedAll[0]);
+        } else {
+          setActiveDevice(null);
+        }
       } catch (e) {
         console.error('Failed to load device config:', e);
       } finally {
@@ -44,10 +48,17 @@ export default function App() {
 
   const handleUpdateDevicesList = (
     updatedList: DeviceConfig[],
-    newActive: DeviceConfig
+    newActive: DeviceConfig | null
   ) => {
     setDevices(updatedList);
-    setActiveDevice(newActive);
+    if (updatedList.length === 0) {
+      setActiveDevice(null);
+      saveActiveDevice(null);
+    } else {
+      const active = newActive && updatedList.some(d => d.id === newActive.id) ? newActive : updatedList[0];
+      setActiveDevice(active);
+      saveActiveDevice(active);
+    }
   };
 
   if (isLoading) {

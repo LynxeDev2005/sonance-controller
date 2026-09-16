@@ -137,7 +137,7 @@ export const SiriGuideScreen: React.FC<SiriGuideScreenProps> = ({ onBack }) => {
             <View style={styles.stepItem}>
               <Check size={12} color="#ffffff" />
               <Text style={styles.stepItemText}>
-                Run <Text style={styles.codeText}>server/install-startup.bat</Text> to start automatically on boot.
+                Install and launch <Text style={styles.codeText}>Sonance PC Companion</Text> (or run <Text style={styles.codeText}>server/install-startup.bat</Text>) on your PC.
               </Text>
             </View>
           </View>

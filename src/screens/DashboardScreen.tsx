@@ -14,16 +14,20 @@ import { PCControlService } from '../services/pcControlService';
 import { ActionCard } from '../components/ActionCard';
 import { VoiceModal } from '../components/VoiceModal';
 import { DeviceCardCarousel } from '../components/DeviceCardCarousel';
+import { QRScannerModal } from '../components/QRScannerModal';
 import {
   Mic,
   CheckCircle2,
   AlertCircle,
   Sliders,
   BookOpen,
+  QrCode,
+  Plus,
+  Monitor,
 } from 'lucide-react-native';
 
 interface DashboardScreenProps {
-  device: DeviceConfig;
+  device: DeviceConfig | null;
   devices: DeviceConfig[];
   onSelectDevice: (device: DeviceConfig) => void;
   onAddNewDevice: () => void;
@@ -43,12 +47,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeActionLoading, setActiveActionLoading] = useState<PowerAction | null>(null);
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
+  const [qrModalVisible, setQrModalVisible] = useState(false);
   const [lastNotification, setLastNotification] = useState<{
     type: 'success' | 'error';
     message: string;
   } | null>(null);
 
   const refreshAllStatuses = useCallback(async () => {
+    if (devices.length === 0) return;
     setIsRefreshing(true);
     try {
       const results = await Promise.allSettled(
@@ -91,6 +97,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   };
 
   const handleExecuteAction = async (action: PowerAction) => {
+    if (!device) {
+      showBanner('error', 'No PC selected. Please add or select a PC first.');
+      return;
+    }
     setActiveActionLoading(action);
     try {
       const result = await PCControlService.executePowerAction(device, action);
@@ -112,6 +122,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     } finally {
       setActiveActionLoading(null);
     }
+  };
+
+  const handleQrScanSuccess = (newDevice: DeviceConfig) => {
+    onSelectDevice(newDevice);
+    showBanner('success', `Added "${newDevice.name}" (${newDevice.ipAddress})`);
   };
 
   return (
@@ -148,13 +163,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         showsVerticalScrollIndicator={false}
       >
         {/* Horizontal Square Device Card Deck with Add Button */}
-        <DeviceCardCarousel
-          devices={devices}
-          activeDeviceId={device.id}
-          statuses={statuses}
-          onSelectDevice={onSelectDevice}
-          onAddNewDevice={onAddNewDevice}
-        />
+        {devices.length > 0 && device && (
+          <DeviceCardCarousel
+            devices={devices}
+            activeDeviceId={device.id}
+            statuses={statuses}
+            onSelectDevice={onSelectDevice}
+            onAddNewDevice={onAddNewDevice}
+          />
+        )}
 
         {/* Feedback Banner */}
         {lastNotification && (
@@ -170,63 +187,104 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </View>
         )}
 
-        {/* Neumorphic Power Actions List */}
-        <View style={styles.actionsSection}>
-          <Text style={styles.sectionTitle}>COMMANDS &middot; {device.name.toUpperCase()}</Text>
+        {/* Empty State when no PC configured */}
+        {!device || devices.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <View style={styles.emptyIconWell}>
+              <Monitor size={32} color="#ffffff" />
+            </View>
+            <Text style={styles.emptyTitle}>NO PC CONNECTED YET</Text>
+            <Text style={styles.emptyDesc}>
+              Pair your Windows computer instantly by scanning the QR code in the Sonance PC Companion desktop app, or add your device manually.
+            </Text>
 
-          {/* Turn On (Wake-on-LAN) - Primary Action */}
-          <ActionCard
-            action="wake"
-            title={`Turn On ${device.name}`}
-            subtitle={`Wake-on-LAN (${device.macAddress})`}
-            iconName="radio"
-            isLoading={activeActionLoading === 'wake'}
-            onPress={handleExecuteAction}
-            isPrimary={true}
-          />
+            <TouchableOpacity
+              style={styles.emptyScanBtn}
+              onPress={() => {
+                try {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                } catch {}
+                setQrModalVisible(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <QrCode size={18} color="#000000" />
+              <Text style={styles.emptyScanBtnText}>Scan PC Companion QR</Text>
+            </TouchableOpacity>
 
-          {/* Restart */}
-          <ActionCard
-            action="restart"
-            title="Restart PC"
-            subtitle="Reboot Windows workstation"
-            iconName="rotate-ccw"
-            isLoading={activeActionLoading === 'restart'}
-            onPress={handleExecuteAction}
-            requiresConfirmation={true}
-          />
+            <TouchableOpacity
+              style={styles.emptyAddBtn}
+              onPress={() => {
+                try {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                } catch {}
+                onAddNewDevice();
+              }}
+              activeOpacity={0.8}
+            >
+              <Plus size={16} color="#ffffff" />
+              <Text style={styles.emptyAddBtnText}>Add PC Manually</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          /* Neumorphic Power Actions List */
+          <View style={styles.actionsSection}>
+            <Text style={styles.sectionTitle}>COMMANDS &middot; {device.name.toUpperCase()}</Text>
 
-          {/* Shutdown */}
-          <ActionCard
-            action="shutdown"
-            title="Shutdown PC"
-            subtitle="Power off target machine"
-            iconName="power"
-            isLoading={activeActionLoading === 'shutdown'}
-            onPress={handleExecuteAction}
-            requiresConfirmation={true}
-          />
+            {/* Turn On (Wake-on-LAN) - Primary Action */}
+            <ActionCard
+              action="wake"
+              title={`Turn On ${device.name}`}
+              subtitle={`Wake-on-LAN (${device.macAddress})`}
+              iconName="radio"
+              isLoading={activeActionLoading === 'wake'}
+              onPress={handleExecuteAction}
+              isPrimary={true}
+            />
 
-          {/* Sleep */}
-          <ActionCard
-            action="sleep"
-            title="Sleep PC"
-            subtitle="Suspend Windows session"
-            iconName="moon"
-            isLoading={activeActionLoading === 'sleep'}
-            onPress={handleExecuteAction}
-          />
+            {/* Restart */}
+            <ActionCard
+              action="restart"
+              title="Restart PC"
+              subtitle="Reboot Windows workstation"
+              iconName="rotate-ccw"
+              isLoading={activeActionLoading === 'restart'}
+              onPress={handleExecuteAction}
+              requiresConfirmation={true}
+            />
 
-          {/* Lock */}
-          <ActionCard
-            action="lock"
-            title="Lock Workstation"
-            subtitle="Lock screen immediately"
-            iconName="lock"
-            isLoading={activeActionLoading === 'lock'}
-            onPress={handleExecuteAction}
-          />
-        </View>
+            {/* Shutdown */}
+            <ActionCard
+              action="shutdown"
+              title="Shutdown PC"
+              subtitle="Power off target machine"
+              iconName="power"
+              isLoading={activeActionLoading === 'shutdown'}
+              onPress={handleExecuteAction}
+              requiresConfirmation={true}
+            />
+
+            {/* Sleep */}
+            <ActionCard
+              action="sleep"
+              title="Sleep PC"
+              subtitle="Suspend Windows session"
+              iconName="moon"
+              isLoading={activeActionLoading === 'sleep'}
+              onPress={handleExecuteAction}
+            />
+
+            {/* Lock */}
+            <ActionCard
+              action="lock"
+              title="Lock Workstation"
+              subtitle="Lock screen immediately"
+              iconName="lock"
+              isLoading={activeActionLoading === 'lock'}
+              onPress={handleExecuteAction}
+            />
+          </View>
+        )}
 
         {/* Neumorphic Quick Links */}
         <View style={styles.quickLinksRow}>
@@ -254,6 +312,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         visible={voiceModalVisible}
         onClose={() => setVoiceModalVisible(false)}
         onExecuteAction={handleExecuteAction}
+      />
+
+      {/* Direct QR Scanner Modal */}
+      <QRScannerModal
+        visible={qrModalVisible}
+        onClose={() => setQrModalVisible(false)}
+        onScanSuccess={handleQrScanSuccess}
       />
     </SafeAreaView>
   );
@@ -371,6 +436,86 @@ const styles = StyleSheet.create({
   quickLinkText: {
     color: '#d4d4d8',
     fontSize: 12,
+    fontWeight: '600',
+  },
+  emptyCard: {
+    backgroundColor: '#15151a',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderTopColor: 'rgba(255, 255, 255, 0.18)',
+    marginHorizontal: 16,
+    marginVertical: 14,
+    padding: 24,
+    alignItems: 'center',
+    gap: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  emptyIconWell: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#0c0c0f',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  emptyTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 1,
+  },
+  emptyDesc: {
+    fontSize: 12.5,
+    color: '#a1a1aa',
+    textAlign: 'center',
+    lineHeight: 19,
+    marginBottom: 6,
+  },
+  emptyScanBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#ffffff',
+    paddingVertical: 13,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+    width: '100%',
+    shadowColor: '#ffffff',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  emptyScanBtnText: {
+    color: '#000000',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  emptyAddBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#0c0c0f',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+    width: '100%',
+  },
+  emptyAddBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
     fontWeight: '600',
   },
 });

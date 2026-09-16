@@ -12,7 +12,7 @@ import { Monitor, Plus } from 'lucide-react-native';
 
 interface DeviceCardCarouselProps {
   devices: DeviceConfig[];
-  activeDeviceId: string;
+  activeDeviceId: string | null;
   statuses: Record<string, PCStatus | null>;
   onSelectDevice: (device: DeviceConfig) => void;
   onAddNewDevice: () => void;
