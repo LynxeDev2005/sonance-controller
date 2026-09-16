@@ -39,6 +39,21 @@ if (fs.existsSync(podfilePath)) {
         elsif framework_paths.is_a?(String)
           config.build_settings['FRAMEWORK_SEARCH_PATHS'] = "#{framework_paths} #{extra_frameworks.join(' ')}"
         end
+
+        extra_includes = [
+          '$(inherited)',
+          '$(PODS_CONFIGURATION_BUILD_DIR)/ExpoModulesCore',
+          '$(PODS_CONFIGURATION_BUILD_DIR)/ExpoModulesJSI',
+          '$(PODS_ROOT)/Headers/Public/ExpoModulesCore'
+        ]
+        swift_includes = config.build_settings['SWIFT_INCLUDE_PATHS']
+        if swift_includes.nil?
+          config.build_settings['SWIFT_INCLUDE_PATHS'] = extra_includes
+        elsif swift_includes.is_a?(Array)
+          extra_includes.each { |p| swift_includes << p unless swift_includes.include?(p) }
+        elsif swift_includes.is_a?(String)
+          config.build_settings['SWIFT_INCLUDE_PATHS'] = "#{swift_includes} #{extra_includes.join(' ')}"
+        end
       end
     end
 `;
