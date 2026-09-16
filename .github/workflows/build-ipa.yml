@@ -35,6 +35,7 @@ jobs:
         run: |
           echo "Available Xcode installations:"
           ls -d /Applications/Xcode_*.app 2>/dev/null || true
+          # Filter out beta/preview versions and select the highest stable versioned Xcode
           LATEST_XCODE=$(ls -d /Applications/Xcode_*.app 2>/dev/null | grep -v -i 'beta' | grep -v -i 'preview' | sort -V | tail -n 1)
           if [ -n "$LATEST_XCODE" ]; then
             echo "Selecting Xcode: $LATEST_XCODE"
@@ -52,9 +53,9 @@ jobs:
           cache: npm
 
       - name: Install JavaScript dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
-      - name: Apply Swift compatibility patches
+      - name: Apply Swift 6.2+ compatibility patches
         run: node scripts/patch-expo-modules-jsi.js
 
       - name: Generate the iOS project
@@ -87,38 +88,6 @@ jobs:
             echo "No Podfile found in ios/, skipping pod install."
           fi
 
-      - name: Re-apply Swift interface patches to installed Pods
-        run: node scripts/patch-expo-modules-jsi.js
-
-      - name: Pre-build ExpoModulesJSI xcframework
-        run: |
-          echo "Building ExpoModulesJSI xcframework explicitly..."
-          cd node_modules/expo-modules-jsi/apple
-          PODS_ROOT="$GITHUB_WORKSPACE/ios/Pods" bash scripts/build-xcframework.sh --clean
-          cd "$GITHUB_WORKSPACE"
-          
-          echo "Syncing built xcframework into ios/Pods and build intermediates..."
-          mkdir -p ios/Pods/ExpoModulesJSI/ExpoModulesJSI.xcframework
-          cp -R node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/* ios/Pods/ExpoModulesJSI/ExpoModulesJSI.xcframework/
-          
-          mkdir -p ios/Pods/ExpoModulesJSI/Products/ExpoModulesJSI.xcframework
-          cp -R node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/* ios/Pods/ExpoModulesJSI/Products/ExpoModulesJSI.xcframework/
-
-          mkdir -p build/Build/Products/Release-iphoneos/XCFrameworkIntermediates/ExpoModulesJSI
-          cp -R node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/ios-arm64/ExpoModulesJSI.framework build/Build/Products/Release-iphoneos/XCFrameworkIntermediates/ExpoModulesJSI/
-
-          mkdir -p build/Build/Products/Release-iphoneos/ExpoModulesJSI
-          cp -R node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/ios-arm64/ExpoModulesJSI.framework build/Build/Products/Release-iphoneos/ExpoModulesJSI/
-
-          mkdir -p ios/Pods/ExpoModulesCore/ExpoModulesCore.xcframework/ios-arm64/ExpoModulesCore.framework/Frameworks
-          cp -R node_modules/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/ios-arm64/ExpoModulesJSI.framework ios/Pods/ExpoModulesCore/ExpoModulesCore.xcframework/ios-arm64/ExpoModulesCore.framework/Frameworks/ 2>/dev/null || true
-
-          echo "✓ Successfully prepared ExpoModulesJSI XCFramework artifacts across all pod and intermediate directories"
-
-      - name: Apply swiftinterface & xcconfig patches to Pods and intermediates
-        run: node scripts/patch-expo-modules-jsi.js
-
-
       - name: Resolve Xcode scheme and target paths
         shell: bash
         env:
@@ -136,6 +105,7 @@ jobs:
           proj_name="$(basename "$(find ios -maxdepth 1 -name '*.xcodeproj' -print -quit)" .xcodeproj)"
           echo "PROJ_NAME=$proj_name" >> "$GITHUB_ENV"
 
+          # 1. Check override -> 2. Match project name -> 3. First non-Pods scheme
           if [ -n "${SCHEME_OVERRIDE:-}" ]; then
             scheme="$SCHEME_OVERRIDE"
           else
@@ -157,6 +127,7 @@ jobs:
           echo "SCHEME=$scheme" >> "$GITHUB_ENV"
           echo "Resolved application scheme: $scheme"
 
+          # Query build settings directly from xcodebuild to verify target type and path
           build_settings="$(xcodebuild -showBuildSettings -workspace "$workspace" -scheme "$scheme" -configuration Release -sdk iphoneos -derivedDataPath build 2>/dev/null)"
           target_build_dir="$(echo "$build_settings" | awk -F ' = ' '$1 ~ /^[ \t]*TARGET_BUILD_DIR$/ {print $2; exit}')"
           wrapper_name="$(echo "$build_settings" | awk -F ' = ' '$1 ~ /^[ \t]*WRAPPER_NAME$/ {print $2; exit}')"
@@ -185,12 +156,10 @@ jobs:
             -sdk iphoneos \
             -destination "generic/platform=iOS" \
             -derivedDataPath build \
-            SWIFT_VERSION=5.0 \
             SWIFT_STRICT_CONCURRENCY=off \
             SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
             GCC_WARN_INHIBIT_ALL_WARNINGS=YES \
             ONLY_ACTIVE_ARCH=NO \
-            ENABLE_USER_SCRIPT_SANDBOXING=NO \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
@@ -243,3 +212,4 @@ jobs:
           name: ${{ env.APP_NAME }}-unsigned-ipa
           path: ${{ env.APP_NAME }}-unsigned.ipa
           retention-days: 90
+

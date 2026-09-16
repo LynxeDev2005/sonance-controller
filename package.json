@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
+    "postinstall": "node scripts/patch-expo-modules-jsi.js",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
@@ -20,6 +21,7 @@
     "expo-font": "~57.0.4",
     "expo-haptics": "~57.0.3",
     "expo-modules-core": "~57.0.18",
+    "expo-modules-jsi": "^57.1.0",
     "expo-splash-screen": "~57.0.9",
     "expo-status-bar": "~57.0.1",
     "lucide-react-native": "^0.475.0",
