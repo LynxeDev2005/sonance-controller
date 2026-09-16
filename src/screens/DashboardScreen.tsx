@@ -14,16 +14,23 @@ import { PCControlService } from '../services/pcControlService';
 import { StatusHeader } from '../components/StatusHeader';
 import { ActionCard } from '../components/ActionCard';
 import { VoiceModal } from '../components/VoiceModal';
+import { DeviceSelectModal } from '../components/DeviceSelectModal';
 import { Mic, CheckCircle2, AlertCircle, Sliders, BookOpen } from 'lucide-react-native';
 
 interface DashboardScreenProps {
   device: DeviceConfig;
+  devices: DeviceConfig[];
+  onSelectDevice: (device: DeviceConfig) => void;
+  onAddNewDevice: () => void;
   onOpenSettings: () => void;
   onOpenSiriGuide: () => void;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   device,
+  devices,
+  onSelectDevice,
+  onAddNewDevice,
   onOpenSettings,
   onOpenSiriGuide,
 }) => {
@@ -31,6 +38,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeActionLoading, setActiveActionLoading] = useState<PowerAction | null>(null);
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
+  const [deviceSelectVisible, setDeviceSelectVisible] = useState(false);
   const [lastNotification, setLastNotification] = useState<{
     type: 'success' | 'error';
     message: string;
@@ -118,12 +126,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Device Status Header */}
+        {/* Device Status Header with Dropdown Switcher */}
         <StatusHeader
           device={device}
           status={status}
           isLoading={isRefreshing}
           onRefresh={refreshStatus}
+          onPressDevice={() => setDeviceSelectVisible(true)}
         />
 
         {/* Compact Feedback Banner */}
@@ -142,12 +151,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         {/* Compact Power Actions List */}
         <View style={styles.actionsSection}>
-          <Text style={styles.sectionTitle}>COMMANDS</Text>
+          <Text style={styles.sectionTitle}>COMMANDS &middot; {device.name.toUpperCase()}</Text>
 
           {/* Turn On (Wake-on-LAN) - Primary Action */}
           <ActionCard
             action="wake"
-            title="Turn On PC"
+            title={`Turn On ${device.name}`}
             subtitle={`Wake-on-LAN (${device.macAddress})`}
             iconName="radio"
             isLoading={activeActionLoading === 'wake'}
@@ -214,10 +223,20 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             activeOpacity={0.7}
           >
             <Sliders size={13} color="#a1a1aa" />
-            <Text style={styles.quickLinkText}>Settings</Text>
+            <Text style={styles.quickLinkText}>Manage PCs ({devices.length})</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Device Switcher Modal */}
+      <DeviceSelectModal
+        visible={deviceSelectVisible}
+        devices={devices}
+        activeDeviceId={device.id}
+        onSelectDevice={onSelectDevice}
+        onAddNewDevice={onAddNewDevice}
+        onClose={() => setDeviceSelectVisible(false)}
+      />
 
       {/* Voice Control Modal */}
       <VoiceModal

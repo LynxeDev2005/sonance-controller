@@ -5,8 +5,8 @@ Pod::Spec.new do |s|
   s.description    = 'Native Swift module providing Wake-on-LAN Magic Packet broadcasting and iOS system utilities'
   s.author         = 'Jhet'
   s.homepage       = 'https://github.com'
-  s.platforms      = { :ios => '15.1' }
-  s.swift_version  = '5.4'
+  s.platforms      = { :ios => '16.4' }
+  s.swift_version  = '6.0'
   s.source         = { :git => '' }
   s.static_framework = true
 

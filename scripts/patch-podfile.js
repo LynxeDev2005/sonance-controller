@@ -15,7 +15,7 @@ if (fs.existsSync(podfilePath)) {
 
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
-        config.build_settings['SWIFT_VERSION'] = '5.0'
+        config.build_settings['SWIFT_VERSION'] = '6.0'
         config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'off'
         config.build_settings['SWIFT_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
         config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
@@ -39,7 +39,10 @@ if (fs.existsSync(podfilePath)) {
       console.log('Appended post_install hook to ios/Podfile.');
     }
   } else {
-    console.log('ios/Podfile already patched.');
+    // If SWIFT_VERSION was 5.0, update to 6.0
+    content = content.replace(/config\.build_settings\['SWIFT_VERSION'\]\s*=\s*'5\.0'/g, "config.build_settings['SWIFT_VERSION'] = '6.0'");
+    fs.writeFileSync(podfilePath, content, 'utf8');
+    console.log('ios/Podfile updated to SWIFT_VERSION 6.0.');
   }
 } else {
   console.log('No ios/Podfile found to patch (will run after expo prebuild).');

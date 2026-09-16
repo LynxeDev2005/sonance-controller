@@ -2,13 +2,14 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { DeviceConfig, PCStatus } from '../types';
 import { GlassCard } from './GlassCard';
-import { RefreshCw, Monitor, Zap, Clock, Cpu } from 'lucide-react-native';
+import { RefreshCw, Monitor, Zap, Clock, Cpu, ChevronDown } from 'lucide-react-native';
 
 interface StatusHeaderProps {
   device: DeviceConfig;
   status: PCStatus | null;
   isLoading: boolean;
   onRefresh: () => void;
+  onPressDevice?: () => void;
 }
 
 export const StatusHeader: React.FC<StatusHeaderProps> = ({
@@ -16,23 +17,32 @@ export const StatusHeader: React.FC<StatusHeaderProps> = ({
   status,
   isLoading,
   onRefresh,
+  onPressDevice,
 }) => {
   const isOnline = status?.online ?? false;
 
   return (
     <GlassCard variant={isOnline ? 'highlight' : 'default'} style={styles.container}>
       <View style={styles.topRow}>
-        <View style={styles.deviceInfo}>
+        <TouchableOpacity
+          style={styles.deviceInfo}
+          onPress={onPressDevice}
+          activeOpacity={0.7}
+          disabled={!onPressDevice}
+        >
           <View style={styles.iconBadge}>
             <Monitor size={16} color="#ffffff" />
           </View>
           <View>
-            <Text style={styles.deviceName}>{device.name || 'Target PC'}</Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.deviceName}>{device.name || 'Target PC'}</Text>
+              {onPressDevice && <ChevronDown size={14} color="#a1a1aa" />}
+            </View>
             <Text style={styles.deviceAddress}>
               {device.ipAddress}:{device.port}
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         <View style={styles.headerRight}>
           <View style={[styles.statusBadge, isOnline && styles.statusBadgeOnline]}>
@@ -105,6 +115,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    flex: 1,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   iconBadge: {
     width: 32,
