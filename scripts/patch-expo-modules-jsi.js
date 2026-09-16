@@ -61,17 +61,11 @@ const buildScriptPath = path.join(
 
 if (fs.existsSync(buildScriptPath)) {
   let scriptContent = fs.readFileSync(buildScriptPath, 'utf8');
-
-  // Relax strict error exit in the wrapper script
   scriptContent = scriptContent.replace('set -euo pipefail', 'set -o pipefail');
-
-  // Handle missing or dangling header files in compute_hash safely
   scriptContent = scriptContent.replace(
     'cat "$file"',
     'cat "$file" 2>/dev/null || true'
   );
-
-  // Add build flags for unsigned build in nested xcodebuild
   if (!scriptContent.includes('CODE_SIGNING_ALLOWED=NO')) {
     scriptContent = scriptContent.replace(
       'CLANG_COVERAGE_MAPPING=NO \\',
@@ -79,7 +73,82 @@ if (fs.existsSync(buildScriptPath)) {
     );
     scriptContent = scriptContent.replace('-quiet \\\n', '');
   }
-
   fs.writeFileSync(buildScriptPath, scriptContent, 'utf8');
   console.log('✓ Successfully patched expo-modules-jsi/apple/scripts/build-xcframework.sh');
 }
+
+// 4. Patch KeepAwakeModule.swift for Swift 6 concurrency / isolation compatibility
+const keepAwakePaths = [
+  path.join(__dirname, '..', 'node_modules', 'expo', 'node_modules', 'expo-keep-awake', 'ios', 'KeepAwakeModule.swift'),
+  path.join(__dirname, '..', 'node_modules', 'expo-keep-awake', 'ios', 'KeepAwakeModule.swift'),
+];
+
+keepAwakePaths.forEach((keepAwakePath) => {
+  if (fs.existsSync(keepAwakePath)) {
+    const keepAwakeContent = `// Copyright 2021-present 650 Industries. All rights reserved.
+
+import ExpoModulesCore
+import UIKit
+
+public final class KeepAwakeModule: Module {
+  private var activeTags = Set<String>()
+
+  public func definition() -> ModuleDefinition {
+    Name("ExpoKeepAwake")
+
+    AsyncFunction("activate") { (tag: String) -> Bool in
+      if self.activeTags.isEmpty {
+        setActivated(true)
+      }
+      self.activeTags.insert(tag)
+      return true
+    }
+
+    AsyncFunction("deactivate") { (tag: String) -> Bool in
+      self.activeTags.remove(tag)
+      if self.activeTags.isEmpty {
+        setActivated(false)
+      }
+      return true
+    }
+
+    AsyncFunction("isActivated") { () -> Bool in
+      #if os(iOS) || os(tvOS)
+      if #available(iOS 13.0, tvOS 13.0, *) {
+        return MainActor.assumeIsolated {
+          UIApplication.shared.isIdleTimerDisabled
+        }
+      } else {
+        return UIApplication.shared.isIdleTimerDisabled
+      }
+      #else
+      return false
+      #endif
+    }
+
+    OnAppEntersForeground {
+      if !self.activeTags.isEmpty {
+        setActivated(true)
+      }
+    }
+
+    OnAppEntersBackground {
+      if !self.activeTags.isEmpty {
+        setActivated(false)
+      }
+    }
+  }
+}
+
+private func setActivated(_ activated: Bool) {
+  #if os(iOS) || os(tvOS)
+  DispatchQueue.main.async {
+    UIApplication.shared.isIdleTimerDisabled = activated
+  }
+  #endif
+}
+`;
+    fs.writeFileSync(keepAwakePath, keepAwakeContent, 'utf8');
+    console.log(`✓ Successfully patched ${keepAwakePath}`);
+  }
+});

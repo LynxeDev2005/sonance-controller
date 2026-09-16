@@ -15,6 +15,7 @@ if (fs.existsSync(podfilePath)) {
 
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
+        config.build_settings['SWIFT_VERSION'] = '5.0'
         config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'off'
         config.build_settings['SWIFT_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
         config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
