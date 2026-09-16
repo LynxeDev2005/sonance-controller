@@ -104,7 +104,7 @@ keepAwakePaths.forEach((keepAwakePath) => {
 import ExpoModulesCore
 import UIKit
 
-public final class KeepAwakeModule: Module {
+public final class KeepAwakeModule: Module, @unchecked Sendable {
   private var activeTags = Set<String>()
 
   public func definition() -> ModuleDefinition {
@@ -128,14 +128,10 @@ public final class KeepAwakeModule: Module {
 
     AsyncFunction("isActivated") { () -> Bool in
       #if os(iOS) || os(tvOS)
-      if #available(iOS 13.0, tvOS 13.0, *) {
-        return MainActor.assumeIsolated {
-          UIApplication.shared.isIdleTimerDisabled
-        }
-      } else {
+      return DispatchQueue.main.sync {
         return UIApplication.shared.isIdleTimerDisabled
       }
-      #else
+      #elseif os(macOS)
       return false
       #endif
     }
