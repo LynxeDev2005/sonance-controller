@@ -24,6 +24,14 @@ if (fs.existsSync(packageSwiftPath)) {
     '.enableUpcomingFeature("InferIsolatedConformances"),',
     '// .enableUpcomingFeature("InferIsolatedConformances"),'
   );
+  content = content.replace(
+    'swiftLanguageModes: [.v6]',
+    'swiftLanguageModes: [.v5]'
+  );
+  content = content.replace(
+    '"-no-verify-emitted-module-interface",',
+    '"-no-verify-emitted-module-interface",\n          "-strict-concurrency=minimal",'
+  );
   fs.writeFileSync(packageSwiftPath, content, 'utf8');
   console.log('✓ Successfully patched expo-modules-jsi/apple/Package.swift');
 }
@@ -69,7 +77,7 @@ if (fs.existsSync(buildScriptPath)) {
   if (!scriptContent.includes('CODE_SIGNING_ALLOWED=NO')) {
     scriptContent = scriptContent.replace(
       'CLANG_COVERAGE_MAPPING=NO \\',
-      'CLANG_COVERAGE_MAPPING=NO \\\n    CODE_SIGNING_ALLOWED=NO \\\n    CODE_SIGNING_REQUIRED=NO \\\n    ENABLE_USER_SCRIPT_SANDBOXING=NO \\\n    SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \\'
+      'CLANG_COVERAGE_MAPPING=NO \\\n    CODE_SIGNING_ALLOWED=NO \\\n    CODE_SIGNING_REQUIRED=NO \\\n    ENABLE_USER_SCRIPT_SANDBOXING=NO \\\n    SWIFT_STRICT_CONCURRENCY=off \\\n    OTHER_SWIFT_FLAGS="-no-warn-concurrency -strict-concurrency=minimal" \\\n    SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \\'
     );
     scriptContent = scriptContent.replace('-quiet \\\n', '');
   }
@@ -175,4 +183,50 @@ if (fs.existsSync(runtimeSchedulerPath)) {
   fs.writeFileSync(runtimeSchedulerPath, content, 'utf8');
   console.log('✓ Successfully patched RuntimeScheduler.h for Swift 6.2 constructor interoperability');
 }
+
+// 6. Patch JavaScriptRuntime.swift pointer isolation in expo-modules-jsi
+const jsRuntimePath = path.join(
+  __dirname,
+  '..',
+  'node_modules',
+  'expo-modules-jsi',
+  'apple',
+  'Sources',
+  'ExpoModulesJSI',
+  'Runtime',
+  'JavaScriptRuntime.swift'
+);
+
+if (fs.existsSync(jsRuntimePath)) {
+  let content = fs.readFileSync(jsRuntimePath, 'utf8');
+
+  // Patch getter resultPtr
+  content = content.replace(
+    /func getter\(\s*context: UnsafeMutableRawPointer,\s*propertyName: UnsafePointer<CChar>,\s*resultPtr: UnsafeMutablePointer<facebook\.jsi\.Value>\s*\) -> Bool \{\s*let propertyName = String\(cString: propertyName\)/g,
+    'func getter(\n      context: UnsafeMutableRawPointer,\n      propertyName: UnsafePointer<CChar>,\n      resultPtr: UnsafeMutablePointer<facebook.jsi.Value>\n    ) -> Bool {\n      let propertyName = String(cString: propertyName)\n      nonisolated(unsafe) let resultPtr = resultPtr'
+  );
+
+  // Patch setter valuePointer
+  content = content.replace(
+    /func setter\(\s*context: UnsafeMutableRawPointer, propertyName: UnsafePointer<CChar>, valuePointer: UnsafeMutableRawPointer\s*\) -> Bool \{\s*let propertyName = String\(cString: propertyName\)/g,
+    'func setter(\n      context: UnsafeMutableRawPointer, propertyName: UnsafePointer<CChar>, valuePointer: UnsafeMutableRawPointer\n    ) -> Bool {\n      let propertyName = String(cString: propertyName)\n      nonisolated(unsafe) let valuePointer = valuePointer'
+  );
+
+  // Patch createFunctionClosure (HostFunctionContext)
+  content = content.replace(
+    'return withGuaranteedContext(context) { (context: HostFunctionContext, runtime) in',
+    'nonisolated(unsafe) let thisPtr = thisPtr\n    nonisolated(unsafe) let argumentsPtr = argumentsPtr\n    nonisolated(unsafe) let resultPtr = resultPtr\n\n    return withGuaranteedContext(context) { (context: HostFunctionContext, runtime) in'
+  );
+
+  // Patch createFunctionClosure (UnownedThisHostFunctionContext)
+  content = content.replace(
+    'return withGuaranteedContext(context) { (context: UnownedThisHostFunctionContext, runtime) in',
+    'nonisolated(unsafe) let thisPtr = thisPtr\n    nonisolated(unsafe) let argumentsPtr = argumentsPtr\n    nonisolated(unsafe) let resultPtr = resultPtr\n\n    return withGuaranteedContext(context) { (context: UnownedThisHostFunctionContext, runtime) in'
+  );
+
+  fs.writeFileSync(jsRuntimePath, content, 'utf8');
+  console.log('✓ Successfully patched JavaScriptRuntime.swift pointer isolation');
+}
+
+
 

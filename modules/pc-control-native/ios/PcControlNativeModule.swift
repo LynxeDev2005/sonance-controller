@@ -160,17 +160,9 @@ public class PcControlNativeModule: Module {
       return true
     }
 
-    var fdset = fd_set()
-    fdset.zero()
-    fdset.set(sock)
-
-    var tv = timeval(
-      tv_sec: timeoutMs / 1000,
-      tv_usec: Int32((timeoutMs % 1000) * 1000)
-    )
-
-    let selectResult = select(sock + 1, nil, &fdset, nil, &tv)
-    if selectResult > 0 {
+    var pfd = pollfd(fd: sock, events: Int16(POLLOUT), revents: 0)
+    let pollResult = poll(&pfd, 1, Int32(timeoutMs))
+    if pollResult > 0 && (pfd.revents & Int16(POLLOUT)) != 0 {
       var error: Int32 = 0
       var len = socklen_t(MemoryLayout<Int32>.size)
       getsockopt(sock, SOL_SOCKET, SO_ERROR, &error, &len)
@@ -178,25 +170,5 @@ public class PcControlNativeModule: Module {
     }
 
     return false
-  }
-}
-
-// Socket fd_set helpers for Swift
-fileprivate extension fd_set {
-  mutating func zero() {
-    #if os(iOS) || os(macOS)
-    self.__fds_bits = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-    #endif
-  }
-
-  mutating func set(_ fd: Int32) {
-    let intOffset = Int(fd / 32)
-    let bitOffset = fd % 32
-    #if os(iOS) || os(macOS)
-    withUnsafeMutablePointer(to: &self.__fds_bits) { ptr in
-      let rawPtr = UnsafeMutableRawPointer(ptr).assumingMemoryBound(to: Int32.self)
-      rawPtr[intOffset] |= (1 << bitOffset)
-    }
-    #endif
   }
 }
