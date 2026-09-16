@@ -6,18 +6,15 @@ Pod::Spec.new do |s|
   s.author         = 'Jhet'
   s.homepage       = 'https://github.com'
   s.platforms      = { :ios => '16.4' }
-  s.swift_version  = '6.0'
+  s.swift_version  = '5.9'
   s.source         = { :git => '' }
   s.static_framework = true
 
   s.dependency 'ExpoModulesCore'
-  s.dependency 'ExpoModulesJSI'
 
   s.source_files = 'ios/**/*.{h,m,mm,swift}'
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
-    'SWIFT_COMPILATION_MODE' => 'wholemodule',
-    'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "${PODS_CONFIGURATION_BUILD_DIR}/XCFrameworkIntermediates/ExpoModulesCore" "${PODS_CONFIGURATION_BUILD_DIR}/XCFrameworkIntermediates/ExpoModulesJSI"',
-    'OTHER_SWIFT_FLAGS' => '$(inherited) -Xcc -Wno-error'
+    'SWIFT_COMPILATION_MODE' => 'wholemodule'
   }
 end
