@@ -16,10 +16,9 @@ interface ActionCardProps {
   title: string;
   subtitle: string;
   iconName: 'power' | 'rotate-ccw' | 'moon' | 'lock' | 'radio';
-  color: string;
-  glowColor: string;
   isLoading: boolean;
   onPress: (action: PowerAction) => void;
+  isPrimary?: boolean;
   requiresConfirmation?: boolean;
 }
 
@@ -28,10 +27,9 @@ export const ActionCard: React.FC<ActionCardProps> = ({
   title,
   subtitle,
   iconName,
-  color,
-  glowColor,
   isLoading,
   onPress,
+  isPrimary = false,
   requiresConfirmation = false,
 }) => {
   const handlePress = () => {
@@ -63,7 +61,8 @@ export const ActionCard: React.FC<ActionCardProps> = ({
   };
 
   const renderIcon = () => {
-    const props = { size: 28, color: '#ffffff' };
+    const iconColor = isPrimary ? '#000000' : '#ffffff';
+    const props = { size: 18, color: iconColor };
     switch (iconName) {
       case 'power':
         return <Power {...props} />;
@@ -83,26 +82,23 @@ export const ActionCard: React.FC<ActionCardProps> = ({
     <TouchableOpacity
       style={[
         styles.card,
-        {
-          borderColor: glowColor,
-          shadowColor: glowColor,
-        },
+        isPrimary ? styles.cardPrimary : styles.cardSecondary,
       ]}
       onPress={handlePress}
       disabled={isLoading}
-      activeOpacity={0.8}
+      activeOpacity={0.75}
     >
-      <View style={[styles.iconWrapper, { backgroundColor: color }]}>
+      <View style={[styles.iconWrapper, isPrimary ? styles.iconPrimary : styles.iconSecondary]}>
         {isLoading ? (
-          <ActivityIndicator size="small" color="#ffffff" />
+          <ActivityIndicator size="small" color={isPrimary ? '#000000' : '#ffffff'} />
         ) : (
           renderIcon()
         )}
       </View>
 
       <View style={styles.textContainer}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
+        <Text style={[styles.title, isPrimary && styles.titlePrimary]}>{title}</Text>
+        <Text style={[styles.subtitle, isPrimary && styles.subtitlePrimary]}>{subtitle}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -110,42 +106,56 @@ export const ActionCard: React.FC<ActionCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#131927',
-    borderRadius: 18,
-    borderWidth: 1.2,
-    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    marginVertical: 6,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 4,
+    gap: 12,
+    marginVertical: 4,
+  },
+  cardPrimary: {
+    backgroundColor: '#ffffff',
+    borderColor: '#ffffff',
+  },
+  cardSecondary: {
+    backgroundColor: '#0f0f12',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   iconWrapper: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
+  },
+  iconPrimary: {
+    backgroundColor: '#f4f4f5',
+  },
+  iconSecondary: {
+    backgroundColor: '#18181b',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   textContainer: {
     flex: 1,
   },
   title: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
-    color: '#f8fafc',
-    letterSpacing: 0.3,
+    color: '#ffffff',
+    letterSpacing: 0.2,
+  },
+  titlePrimary: {
+    color: '#000000',
   },
   subtitle: {
-    fontSize: 12,
-    color: '#94a3b8',
-    marginTop: 3,
+    fontSize: 11,
+    color: '#71717a',
+    marginTop: 1,
+  },
+  subtitlePrimary: {
+    color: '#3f3f46',
   },
 });

@@ -18,10 +18,10 @@ export const SiriGuideScreen: React.FC<SiriGuideScreenProps> = ({ onBack }) => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerBar}>
         <TouchableOpacity style={styles.backBtn} onPress={onBack}>
-          <ArrowLeft size={20} color="#94a3b8" />
+          <ArrowLeft size={16} color="#ffffff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Voice & Siri Setup Guide</Text>
-        <View style={{ width: 36 }} />
+        <Text style={styles.headerTitle}>SIRI & BIOS SETUP</Text>
+        <View style={{ width: 28 }} />
       </View>
 
       <ScrollView
@@ -32,14 +32,14 @@ export const SiriGuideScreen: React.FC<SiriGuideScreenProps> = ({ onBack }) => {
         {/* Step 1: Siri Voice Commands */}
         <View style={styles.guideCard}>
           <View style={styles.cardHeader}>
-            <View style={[styles.stepBadge, { backgroundColor: '#0284c7' }]}>
-              <Mic size={16} color="#ffffff" />
+            <View style={styles.stepBadge}>
+              <Mic size={14} color="#000000" />
             </View>
-            <Text style={styles.cardTitle}>1. Siri Voice Shortcuts (iOS)</Text>
+            <Text style={styles.cardTitle}>1. Siri Voice Shortcuts</Text>
           </View>
 
           <Text style={styles.bodyText}>
-            You can trigger commands completely hands-free from your iPhone or Apple Watch using Siri:
+            Say hands-free commands from your iPhone or Apple Watch:
           </Text>
 
           <View style={styles.commandList}>
@@ -49,59 +49,45 @@ export const SiriGuideScreen: React.FC<SiriGuideScreenProps> = ({ onBack }) => {
             </View>
             <View style={styles.commandItem}>
               <Text style={styles.commandPhrase}>"Hey Siri, Shutdown PC"</Text>
-              <Text style={styles.commandDesc}>Triggers authenticated Windows shutdown</Text>
+              <Text style={styles.commandDesc}>Triggers Windows shutdown</Text>
             </View>
             <View style={styles.commandItem}>
               <Text style={styles.commandPhrase}>"Hey Siri, Restart PC"</Text>
-              <Text style={styles.commandDesc}>Reboots your Windows machine</Text>
+              <Text style={styles.commandDesc}>Reboots target machine</Text>
             </View>
             <View style={styles.commandItem}>
               <Text style={styles.commandPhrase}>"Hey Siri, Sleep PC"</Text>
-              <Text style={styles.commandDesc}>Suspends PC to RAM</Text>
+              <Text style={styles.commandDesc}>Suspends Windows session</Text>
             </View>
           </View>
-
-          <Text style={styles.subText}>
-            💡 <Text style={{ fontWeight: '700', color: '#f8fafc' }}>Automatic Donation:</Text> Every time you press a button or use the in-app voice in PC Control, the app automatically registers that action with iOS Siri Suggestions so it appears in your Shortcuts app.
-          </Text>
         </View>
 
         {/* Step 2: Wake-on-LAN BIOS Setup */}
         <View style={styles.guideCard}>
           <View style={styles.cardHeader}>
-            <View style={[styles.stepBadge, { backgroundColor: '#059669' }]}>
-              <Settings size={16} color="#ffffff" />
+            <View style={styles.stepBadge}>
+              <Settings size={14} color="#000000" />
             </View>
-            <Text style={styles.cardTitle}>2. PC BIOS / UEFI Wake-on-LAN</Text>
+            <Text style={styles.cardTitle}>2. PC BIOS / UEFI Setup</Text>
           </View>
-
-          <Text style={styles.bodyText}>
-            To allow your PC to turn on from a powered-off or sleeping state:
-          </Text>
 
           <View style={styles.stepList}>
             <View style={styles.stepItem}>
-              <Check size={14} color="#4ade80" />
+              <Check size={12} color="#ffffff" />
               <Text style={styles.stepItemText}>
-                Restart PC and enter BIOS (<Text style={styles.codeText}>DEL</Text> or <Text style={styles.codeText}>F2</Text> key).
+                Restart PC and enter BIOS (<Text style={styles.codeText}>DEL / F2</Text>).
               </Text>
             </View>
             <View style={styles.stepItem}>
-              <Check size={14} color="#4ade80" />
+              <Check size={12} color="#ffffff" />
               <Text style={styles.stepItemText}>
-                Navigate to <Text style={styles.codeText}>Advanced</Text> → <Text style={styles.codeText}>Power Management / APM</Text>.
+                Go to <Text style={styles.codeText}>Power Management / APM</Text>.
               </Text>
             </View>
             <View style={styles.stepItem}>
-              <Check size={14} color="#4ade80" />
+              <Check size={12} color="#ffffff" />
               <Text style={styles.stepItemText}>
-                Enable <Text style={styles.codeText}>Power On By PCI-E/LAN Device</Text> (or <Text style={styles.codeText}>Wake on LAN</Text>).
-              </Text>
-            </View>
-            <View style={styles.stepItem}>
-              <Check size={14} color="#4ade80" />
-              <Text style={styles.stepItemText}>
-                Save settings and boot into Windows.
+                Enable <Text style={styles.codeText}>Power On By PCI-E / LAN</Text>.
               </Text>
             </View>
           </View>
@@ -110,35 +96,29 @@ export const SiriGuideScreen: React.FC<SiriGuideScreenProps> = ({ onBack }) => {
         {/* Step 3: Windows Network Adapter Settings */}
         <View style={styles.guideCard}>
           <View style={styles.cardHeader}>
-            <View style={[styles.stepBadge, { backgroundColor: '#d97706' }]}>
-              <Wifi size={16} color="#ffffff" />
+            <View style={styles.stepBadge}>
+              <Wifi size={14} color="#000000" />
             </View>
-            <Text style={styles.cardTitle}>3. Windows Network Adapter Setup</Text>
+            <Text style={styles.cardTitle}>3. Windows Network Adapter</Text>
           </View>
 
           <View style={styles.stepList}>
             <View style={styles.stepItem}>
-              <Check size={14} color="#f59e0b" />
+              <Check size={12} color="#ffffff" />
               <Text style={styles.stepItemText}>
-                Press <Text style={styles.codeText}>Win + X</Text> → Select <Text style={styles.codeText}>Device Manager</Text>.
+                Open <Text style={styles.codeText}>Device Manager</Text> → <Text style={styles.codeText}>Network Adapters</Text> → Properties.
               </Text>
             </View>
             <View style={styles.stepItem}>
-              <Check size={14} color="#f59e0b" />
+              <Check size={12} color="#ffffff" />
               <Text style={styles.stepItemText}>
-                Expand <Text style={styles.codeText}>Network adapters</Text> → Right-click your Ethernet / Wi-Fi adapter → <Text style={styles.codeText}>Properties</Text>.
+                In <Text style={styles.codeText}>Power Management</Text>: Check <Text style={styles.codeText}>Allow this device to wake the computer</Text>.
               </Text>
             </View>
             <View style={styles.stepItem}>
-              <Check size={14} color="#f59e0b" />
+              <Check size={12} color="#ffffff" />
               <Text style={styles.stepItemText}>
-                In <Text style={styles.codeText}>Power Management</Text> tab: Check <Text style={styles.codeText}>"Allow this device to wake the computer"</Text> & <Text style={styles.codeText}>"Only allow a magic packet to wake the computer"</Text>.
-              </Text>
-            </View>
-            <View style={styles.stepItem}>
-              <Check size={14} color="#f59e0b" />
-              <Text style={styles.stepItemText}>
-                In <Text style={styles.codeText}>Advanced</Text> tab: Ensure <Text style={styles.codeText}>"Wake on Magic Packet"</Text> is set to <Text style={styles.codeText}>Enabled</Text>.
+                In <Text style={styles.codeText}>Advanced</Text>: Enable <Text style={styles.codeText}>Wake on Magic Packet</Text>.
               </Text>
             </View>
           </View>
@@ -147,27 +127,17 @@ export const SiriGuideScreen: React.FC<SiriGuideScreenProps> = ({ onBack }) => {
         {/* Step 4: Windows Companion Agent */}
         <View style={styles.guideCard}>
           <View style={styles.cardHeader}>
-            <View style={[styles.stepBadge, { backgroundColor: '#7c3aed' }]}>
-              <ShieldCheck size={16} color="#ffffff" />
+            <View style={styles.stepBadge}>
+              <ShieldCheck size={14} color="#000000" />
             </View>
-            <Text style={styles.cardTitle}>4. Windows Background Companion</Text>
+            <Text style={styles.cardTitle}>4. Windows Background Agent</Text>
           </View>
-
-          <Text style={styles.bodyText}>
-            For Restart, Shutdown, and Sleep to work remotely:
-          </Text>
 
           <View style={styles.stepList}>
             <View style={styles.stepItem}>
-              <Check size={14} color="#a855f7" />
+              <Check size={12} color="#ffffff" />
               <Text style={styles.stepItemText}>
-                Double-click <Text style={styles.codeText}>server/install-startup.bat</Text> in this project.
-              </Text>
-            </View>
-            <View style={styles.stepItem}>
-              <Check size={14} color="#a855f7" />
-              <Text style={styles.stepItemText}>
-                This installs the lightweight Node.js daemon to run silently on port 5005 whenever your PC boots!
+                Run <Text style={styles.codeText}>server/install-startup.bat</Text> to start automatically on boot.
               </Text>
             </View>
           </View>
@@ -180,109 +150,105 @@ export const SiriGuideScreen: React.FC<SiriGuideScreenProps> = ({ onBack }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0b0f19',
+    backgroundColor: '#000000',
   },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   backBtn: {
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    padding: 6,
+    borderRadius: 8,
+    backgroundColor: '#18181b',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#f8fafc',
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 1,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
-    gap: 16,
+    padding: 14,
+    paddingBottom: 30,
+    gap: 10,
   },
   guideCard: {
-    backgroundColor: '#131927',
-    borderRadius: 20,
+    backgroundColor: '#0d0d10',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 18,
-    gap: 12,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    padding: 14,
+    gap: 8,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   stepBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 26,
+    height: 26,
+    borderRadius: 6,
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardTitle: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#f8fafc',
+    color: '#ffffff',
   },
   bodyText: {
-    fontSize: 13,
-    color: '#94a3b8',
-    lineHeight: 19,
+    fontSize: 12,
+    color: '#a1a1aa',
+    lineHeight: 16,
   },
   commandList: {
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 14,
-    padding: 12,
-    gap: 10,
+    backgroundColor: '#18181b',
+    borderRadius: 8,
+    padding: 10,
+    gap: 6,
   },
   commandItem: {
-    gap: 2,
+    gap: 1,
   },
   commandPhrase: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#38bdf8',
+    color: '#ffffff',
     fontFamily: 'monospace',
   },
   commandDesc: {
-    fontSize: 11,
-    color: '#64748b',
-  },
-  subText: {
-    fontSize: 12,
-    color: '#94a3b8',
-    lineHeight: 18,
-    backgroundColor: 'rgba(56, 189, 248, 0.06)',
-    padding: 10,
-    borderRadius: 10,
+    fontSize: 10,
+    color: '#71717a',
   },
   stepList: {
-    gap: 10,
+    gap: 6,
   },
   stepItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 10,
+    gap: 8,
   },
   stepItemText: {
     flex: 1,
-    fontSize: 13,
-    color: '#cbd5e1',
-    lineHeight: 18,
+    fontSize: 12,
+    color: '#d4d4d8',
+    lineHeight: 16,
   },
   codeText: {
-    color: '#38bdf8',
+    color: '#ffffff',
     fontFamily: 'monospace',
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

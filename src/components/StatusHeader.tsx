@@ -20,11 +20,11 @@ export const StatusHeader: React.FC<StatusHeaderProps> = ({
   const isOnline = status?.online ?? false;
 
   return (
-    <GlassCard variant={isOnline ? 'glow' : 'default'} style={styles.container}>
+    <GlassCard variant={isOnline ? 'highlight' : 'default'} style={styles.container}>
       <View style={styles.topRow}>
         <View style={styles.deviceInfo}>
           <View style={styles.iconBadge}>
-            <Monitor size={20} color={isOnline ? '#38bdf8' : '#94a3b8'} />
+            <Monitor size={16} color="#ffffff" />
           </View>
           <View>
             <Text style={styles.deviceName}>{device.name || 'Target PC'}</Text>
@@ -34,71 +34,67 @@ export const StatusHeader: React.FC<StatusHeaderProps> = ({
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.refreshButton}
-          onPress={onRefresh}
-          disabled={isLoading}
-          activeOpacity={0.7}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#38bdf8" />
-          ) : (
-            <RefreshCw size={16} color="#94a3b8" />
-          )}
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.divider} />
-
-      <View style={styles.statusRow}>
-        <View style={styles.statusBadge}>
-          <View
-            style={[
-              styles.statusDot,
-              { backgroundColor: isOnline ? '#22c55e' : '#ef4444' },
-            ]}
-          />
-          <Text
-            style={[
-              styles.statusText,
-              { color: isOnline ? '#4ade80' : '#f87171' },
-            ]}
-          >
-            {isOnline ? 'ONLINE' : 'OFFLINE'}
-          </Text>
-        </View>
-
-        {isOnline && status?.latencyMs !== undefined && (
-          <View style={styles.metricBadge}>
-            <Zap size={12} color="#38bdf8" />
-            <Text style={styles.metricText}>{status.latencyMs}ms</Text>
-          </View>
-        )}
-
-        {isOnline && status?.uptimeHours && (
-          <View style={styles.metricBadge}>
-            <Clock size={12} color="#a855f7" />
-            <Text style={styles.metricText}>{status.uptimeHours}</Text>
-          </View>
-        )}
-
-        {isOnline && status?.memory && (
-          <View style={styles.metricBadge}>
-            <Cpu size={12} color="#eab308" />
-            <Text style={styles.metricText}>
-              {status.memory.free} Free
+        <View style={styles.headerRight}>
+          <View style={[styles.statusBadge, isOnline && styles.statusBadgeOnline]}>
+            <View
+              style={[
+                styles.statusDot,
+                { backgroundColor: isOnline ? '#ffffff' : '#52525b' },
+              ]}
+            />
+            <Text style={[styles.statusText, isOnline ? styles.statusTextOnline : styles.statusTextOffline]}>
+              {isOnline ? 'ONLINE' : 'OFFLINE'}
             </Text>
           </View>
-        )}
+
+          <TouchableOpacity
+            style={styles.refreshButton}
+            onPress={onRefresh}
+            disabled={isLoading}
+            activeOpacity={0.7}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <RefreshCw size={13} color="#a1a1aa" />
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
+
+      {isOnline && (
+        <View style={styles.metricsRow}>
+          {status?.latencyMs !== undefined && (
+            <View style={styles.metricItem}>
+              <Zap size={11} color="#ffffff" />
+              <Text style={styles.metricText}>{status.latencyMs}ms</Text>
+            </View>
+          )}
+
+          {status?.uptimeHours && (
+            <View style={styles.metricItem}>
+              <Clock size={11} color="#ffffff" />
+              <Text style={styles.metricText}>{status.uptimeHours}</Text>
+            </View>
+          )}
+
+          {status?.memory && (
+            <View style={styles.metricItem}>
+              <Cpu size={11} color="#ffffff" />
+              <Text style={styles.metricText}>{status.memory.free} Free</Text>
+            </View>
+          )}
+        </View>
+      )}
     </GlassCard>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
-    marginVertical: 10,
+    marginHorizontal: 14,
+    marginVertical: 6,
+    padding: 12,
   },
   topRow: {
     flexDirection: 'row',
@@ -108,78 +104,100 @@ const styles = StyleSheet.create({
   deviceInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   iconBadge: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#18181b',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   deviceName: {
-    fontSize: 17,
+    fontSize: 14,
     fontWeight: '700',
-    color: '#f8fafc',
-    letterSpacing: 0.3,
+    color: '#ffffff',
+    letterSpacing: 0.2,
   },
   deviceAddress: {
-    fontSize: 12,
-    color: '#64748b',
-    marginTop: 2,
+    fontSize: 11,
+    color: '#71717a',
     fontFamily: 'monospace',
+    marginTop: 1,
   },
-  refreshButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    marginVertical: 12,
-  },
-  statusRow: {
+  headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    gap: 6,
+    backgroundColor: '#18181b',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    gap: 5,
+  },
+  statusBadgeOnline: {
+    backgroundColor: '#27272a',
+    borderColor: '#ffffff',
   },
   statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   },
-  metricBadge: {
+  statusTextOnline: {
+    color: '#ffffff',
+  },
+  statusTextOffline: {
+    color: '#71717a',
+  },
+  refreshButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 7,
+    backgroundColor: '#18181b',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  metricsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    paddingVertical: 5,
-    paddingHorizontal: 8,
-    borderRadius: 8,
+    gap: 8,
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  metricItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#18181b',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    paddingVertical: 3,
+    paddingHorizontal: 7,
+    borderRadius: 6,
     gap: 4,
   },
   metricText: {
-    fontSize: 11,
-    color: '#cbd5e1',
+    fontSize: 10,
+    color: '#d4d4d8',
     fontWeight: '600',
+    fontFamily: 'monospace',
   },
 });

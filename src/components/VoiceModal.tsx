@@ -46,13 +46,13 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.25,
-          duration: 900,
+          toValue: 1.2,
+          duration: 800,
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 900,
+          duration: 800,
           useNativeDriver: true,
         }),
       ])
@@ -74,7 +74,7 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
       setIsProcessing(false);
       setTimeout(() => {
         onClose();
-      }, 1200);
+      }, 1000);
     }
   };
 
@@ -89,7 +89,7 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       onRequestClose={onClose}
     >
@@ -98,15 +98,15 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <Sparkles size={20} color="#38bdf8" />
-              <Text style={styles.headerTitle}>Voice Control</Text>
+              <Sparkles size={16} color="#ffffff" />
+              <Text style={styles.headerTitle}>VOICE COMMANDS</Text>
             </View>
             <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-              <X size={20} color="#94a3b8" />
+              <X size={16} color="#a1a1aa" />
             </TouchableOpacity>
           </View>
 
-          {/* Glowing Animated Mic */}
+          {/* Minimalist Glowing Animated Mic */}
           <View style={styles.micContainer}>
             <Animated.View
               style={[
@@ -114,8 +114,8 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
                 {
                   transform: [{ scale: pulseAnim }],
                   opacity: pulseAnim.interpolate({
-                    inputRange: [1, 1.25],
-                    outputRange: [0.6, 0.1],
+                    inputRange: [1, 1.2],
+                    outputRange: [0.4, 0.05],
                   }),
                 },
               ]}
@@ -130,9 +130,9 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
               }}
             >
               {isProcessing ? (
-                <ActivityIndicator size="large" color="#ffffff" />
+                <ActivityIndicator size="small" color="#000000" />
               ) : (
-                <Mic size={38} color="#ffffff" />
+                <Mic size={28} color="#000000" />
               )}
             </TouchableOpacity>
           </View>
@@ -143,28 +143,8 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
               <>
                 <Text style={styles.transcriptText}>"{transcript}"</Text>
                 {matchedIntent && (
-                  <View
-                    style={[
-                      styles.intentBadge,
-                      {
-                        backgroundColor:
-                          matchedIntent.action === 'unknown'
-                            ? 'rgba(239, 68, 68, 0.15)'
-                            : 'rgba(34, 197, 94, 0.15)',
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.intentText,
-                        {
-                          color:
-                            matchedIntent.action === 'unknown'
-                              ? '#f87171'
-                              : '#4ade80',
-                        },
-                      ]}
-                    >
+                  <View style={styles.intentBadge}>
+                    <Text style={styles.intentText}>
                       {matchedIntent.description}
                     </Text>
                   </View>
@@ -172,7 +152,7 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
               </>
             ) : (
               <Text style={styles.listeningHint}>
-                Listening... Say a command or choose a quick action below
+                Listening for commands... Or tap a quick action below
               </Text>
             )}
           </View>
@@ -180,8 +160,8 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
           {/* Quick Voice Phrase Shortcuts */}
           <View style={styles.phrasesSection}>
             <View style={styles.phrasesTitleRow}>
-              <Volume2 size={14} color="#64748b" />
-              <Text style={styles.phrasesTitle}>Quick Voice Commands</Text>
+              <Volume2 size={12} color="#71717a" />
+              <Text style={styles.phrasesTitle}>Suggested Actions</Text>
             </View>
             <View style={styles.phrasesGrid}>
               {quickPhrases.map((phrase, idx) => (
@@ -206,17 +186,17 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 8, 16, 0.85)',
+    backgroundColor: 'rgba(0, 0, 0, 0.88)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#0f172a',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    backgroundColor: '#09090b',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     borderTopWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    padding: 24,
-    paddingBottom: 40,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    padding: 20,
+    paddingBottom: 34,
     alignItems: 'center',
   },
   header: {
@@ -224,115 +204,115 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 14,
   },
   headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#f8fafc',
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 1,
   },
   closeBtn: {
     padding: 6,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: 8,
+    backgroundColor: '#18181b',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   micContainer: {
-    width: 130,
-    height: 130,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 14,
-  },
-  pulseRing: {
-    position: 'absolute',
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    backgroundColor: '#38bdf8',
-  },
-  micButton: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    backgroundColor: '#0284c7',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#38bdf8',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.6,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  feedbackContainer: {
-    width: '100%',
-    minHeight: 80,
+    width: 90,
+    height: 90,
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 10,
-    paddingHorizontal: 12,
+  },
+  pulseRing: {
+    position: 'absolute',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#ffffff',
+  },
+  micButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  feedbackContainer: {
+    width: '100%',
+    minHeight: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 6,
+    paddingHorizontal: 8,
   },
   listeningHint: {
-    color: '#94a3b8',
-    fontSize: 14,
+    color: '#71717a',
+    fontSize: 12,
     textAlign: 'center',
-    lineHeight: 20,
   },
   transcriptText: {
-    color: '#38bdf8',
-    fontSize: 20,
+    color: '#ffffff',
+    fontSize: 16,
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   intentBadge: {
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    marginTop: 4,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: '#18181b',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   intentText: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '600',
+    color: '#d4d4d8',
     textAlign: 'center',
   },
   phrasesSection: {
     width: '100%',
-    marginTop: 16,
+    marginTop: 12,
   },
   phrasesTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 10,
+    gap: 5,
+    marginBottom: 8,
   },
   phrasesTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
-    color: '#64748b',
+    color: '#71717a',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   phrasesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
   phraseChip: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#121215',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
   },
   phraseChipText: {
-    color: '#e2e8f0',
-    fontSize: 13,
+    color: '#e4e4e7',
+    fontSize: 12,
     fontWeight: '500',
   },
 });

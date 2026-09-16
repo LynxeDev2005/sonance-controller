@@ -72,16 +72,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch {}
       Alert.alert(
-        'Connection Successful! 🟢',
-        `Connected to ${status.hostname || 'PC'} in ${status.latencyMs}ms.\nOS: ${status.platform || 'Windows'}\nUptime: ${status.uptimeHours || 'N/A'}`
+        'Connected 🟢',
+        `Host: ${status.hostname || 'PC'}\nLatency: ${status.latencyMs}ms\nUptime: ${status.uptimeHours || 'N/A'}`
       );
     } else {
       try {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       } catch {}
       Alert.alert(
-        'Connection Failed 🔴',
-        `Could not connect to ${testConfig.ipAddress}:${testConfig.port}.\n\nEnsure:\n1. PC is powered on\n2. "node server/agent.js" is running\n3. Phone is connected to the same Wi-Fi network.`
+        'Offline 🔴',
+        `Could not connect to ${testConfig.ipAddress}:${testConfig.port}.\nCheck if Companion Agent is running on PC.`
       );
     }
   };
@@ -89,7 +89,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const handleTestWol = async () => {
     const formattedMac = sanitizeMacAddress(macAddress);
     if (!isValidMacAddress(formattedMac)) {
-      Alert.alert('Invalid MAC', 'Please enter a valid 12-character MAC address (e.g. 9C:6B:00:E2:9C:24).');
+      Alert.alert('Invalid MAC', 'Enter a valid 12-character MAC address (e.g. 9C:6B:00:E2:9C:24).');
       return;
     }
 
@@ -107,7 +107,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       try {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch {}
-      Alert.alert('WOL Packet Sent ⚡', `Magic packet broadcasted to ${testConfig.macAddress} on ${testConfig.broadcastAddress}:9.`);
+      Alert.alert('WOL Sent ⚡', `Packet sent to ${testConfig.macAddress} on ${testConfig.broadcastAddress}:9.`);
     } else {
       Alert.alert('WOL Failed', result.error || 'Failed to send packet.');
     }
@@ -154,11 +154,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerBar}>
         <TouchableOpacity style={styles.backBtn} onPress={onBack}>
-          <ArrowLeft size={20} color="#94a3b8" />
+          <ArrowLeft size={16} color="#ffffff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Device Configuration</Text>
+        <Text style={styles.headerTitle}>SETTINGS</Text>
         <TouchableOpacity style={styles.saveHeaderBtn} onPress={handleSave}>
-          <Save size={18} color="#38bdf8" />
+          <Save size={14} color="#000000" />
           <Text style={styles.saveHeaderText}>Save</Text>
         </TouchableOpacity>
       </View>
@@ -170,91 +170,91 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       >
         {/* Device Profile Fields */}
         <View style={styles.card}>
-          <Text style={styles.cardSectionTitle}>TARGET PC DETAILS</Text>
+          <Text style={styles.cardSectionTitle}>DEVICE CONFIGURATION</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Device Label / Nickname</Text>
+            <Text style={styles.label}>Device Nickname</Text>
             <TextInput
               style={styles.input}
               value={name}
               onChangeText={setName}
-              placeholder="e.g. My Gaming PC"
-              placeholderTextColor="#64748b"
+              placeholder="e.g. My PC"
+              placeholderTextColor="#52525b"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>PC Local IPv4 Address</Text>
+            <Text style={styles.label}>PC Local IP</Text>
             <TextInput
               style={styles.input}
               value={ipAddress}
               onChangeText={setIpAddress}
               placeholder="192.168.1.100"
-              placeholderTextColor="#64748b"
+              placeholderTextColor="#52525b"
               autoCapitalize="none"
               keyboardType="numeric"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>NIC MAC Address (for Wake-on-LAN)</Text>
+            <Text style={styles.label}>MAC Address (for Wake-on-LAN)</Text>
             <TextInput
               style={styles.input}
               value={macAddress}
               onChangeText={(text) => setMacAddress(sanitizeMacAddress(text))}
               placeholder="9C:6B:00:E2:9C:24"
-              placeholderTextColor="#64748b"
+              placeholderTextColor="#52525b"
               autoCapitalize="characters"
             />
           </View>
 
           <View style={styles.inputGroup}>
             <View style={styles.labelRow}>
-              <Text style={styles.label}>Subnet Broadcast Address</Text>
+              <Text style={styles.label}>Broadcast Address</Text>
               <TouchableOpacity onPress={handleAutoFillSubnet}>
-                <Text style={styles.autoActionText}>Auto-Calculate</Text>
+                <Text style={styles.autoActionText}>Auto-Fill</Text>
               </TouchableOpacity>
             </View>
             <TextInput
               style={styles.input}
               value={broadcastAddress}
               onChangeText={setBroadcastAddress}
-              placeholder="192.168.1.255 or 255.255.255.255"
-              placeholderTextColor="#64748b"
+              placeholder="192.168.1.255"
+              placeholderTextColor="#52525b"
               autoCapitalize="none"
             />
           </View>
 
           <View style={styles.rowTwoInputs}>
             <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={styles.label}>Agent Port</Text>
+              <Text style={styles.label}>Port</Text>
               <TextInput
                 style={styles.input}
                 value={port}
                 onChangeText={setPort}
                 placeholder="5005"
-                placeholderTextColor="#64748b"
+                placeholderTextColor="#52525b"
                 keyboardType="numeric"
               />
             </View>
 
             <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={styles.label}>Security PIN</Text>
+              <Text style={styles.label}>PIN</Text>
               <TextInput
                 style={styles.input}
                 value={pin}
                 onChangeText={setPin}
                 placeholder="1234"
-                placeholderTextColor="#64748b"
+                placeholderTextColor="#52525b"
                 secureTextEntry={false}
               />
             </View>
           </View>
         </View>
 
-        {/* Diagnostics & Test Buttons */}
+        {/* Diagnostics Buttons */}
         <View style={styles.card}>
-          <Text style={styles.cardSectionTitle}>DIAGNOSTICS & VERIFICATION</Text>
+          <Text style={styles.cardSectionTitle}>CONNECTION TEST</Text>
 
           <View style={styles.testButtonsRow}>
             <TouchableOpacity
@@ -264,44 +264,39 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               activeOpacity={0.7}
             >
               {isTestingPing ? (
-                <ActivityIndicator size="small" color="#38bdf8" />
+                <ActivityIndicator size="small" color="#ffffff" />
               ) : (
                 <>
-                  <Zap size={16} color="#38bdf8" />
+                  <Zap size={14} color="#ffffff" />
                   <Text style={styles.testBtnText}>Test Agent Connection</Text>
                 </>
               )}
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.testBtn, styles.testBtnWol]}
+              style={styles.testBtn}
               onPress={handleTestWol}
               disabled={isTestingWol}
               activeOpacity={0.7}
             >
               {isTestingWol ? (
-                <ActivityIndicator size="small" color="#4ade80" />
+                <ActivityIndicator size="small" color="#ffffff" />
               ) : (
                 <>
-                  <Radio size={16} color="#4ade80" />
-                  <Text style={[styles.testBtnText, { color: '#4ade80' }]}>
-                    Test Wake Packet
-                  </Text>
+                  <Radio size={14} color="#ffffff" />
+                  <Text style={styles.testBtnText}>Test Wake Packet</Text>
                 </>
               )}
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Info / Guide Box */}
+        {/* Quick Info Box */}
         <View style={styles.infoBox}>
-          <Info size={18} color="#38bdf8" />
+          <Info size={14} color="#a1a1aa" />
           <View style={{ flex: 1 }}>
-            <Text style={styles.infoTitle}>How to find your PC details:</Text>
             <Text style={styles.infoText}>
-              1. Open a terminal on your PC and run: <Text style={styles.codeText}>node server/agent.js</Text>
-              {'\n'}2. The agent will display your exact IP & MAC addresses on the screen!
-              {'\n'}3. Double-click <Text style={styles.codeText}>server/install-startup.bat</Text> so the agent runs automatically whenever Windows starts.
+              Run <Text style={styles.codeText}>server/install-startup.bat</Text> on your Windows machine to start the background agent.
             </Text>
           </View>
         </View>
@@ -313,67 +308,68 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0b0f19',
+    backgroundColor: '#000000',
   },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   backBtn: {
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    padding: 6,
+    borderRadius: 8,
+    backgroundColor: '#18181b',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#f8fafc',
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 1,
   },
   saveHeaderBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(56, 189, 248, 0.12)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.3)',
+    backgroundColor: '#ffffff',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 8,
   },
   saveHeaderText: {
-    color: '#38bdf8',
-    fontSize: 13,
+    color: '#000000',
+    fontSize: 12,
     fontWeight: '700',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
-    gap: 16,
+    padding: 14,
+    paddingBottom: 30,
+    gap: 12,
   },
   card: {
-    backgroundColor: '#131927',
-    borderRadius: 20,
+    backgroundColor: '#0d0d10',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 18,
-    gap: 14,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    padding: 14,
+    gap: 10,
   },
   cardSectionTitle: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '800',
-    color: '#64748b',
+    color: '#71717a',
     letterSpacing: 0.8,
   },
   inputGroup: {
-    gap: 6,
+    gap: 4,
   },
   labelRow: {
     flexDirection: 'row',
@@ -381,76 +377,68 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   label: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#cbd5e1',
+    color: '#a1a1aa',
   },
   autoActionText: {
-    fontSize: 12,
-    color: '#38bdf8',
-    fontWeight: '600',
+    fontSize: 11,
+    color: '#ffffff',
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
   input: {
-    backgroundColor: '#0b0f19',
+    backgroundColor: '#18181b',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    color: '#f8fafc',
-    fontSize: 14,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    color: '#ffffff',
+    fontSize: 13,
     fontFamily: 'monospace',
   },
   rowTwoInputs: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
   },
   testButtonsRow: {
-    gap: 10,
+    gap: 8,
   },
   testBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(56, 189, 248, 0.08)',
+    gap: 6,
+    backgroundColor: '#18181b',
     borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.25)',
-    paddingVertical: 12,
-    borderRadius: 14,
-  },
-  testBtnWol: {
-    backgroundColor: 'rgba(34, 197, 94, 0.08)',
-    borderColor: 'rgba(34, 197, 94, 0.25)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    paddingVertical: 10,
+    borderRadius: 8,
   },
   testBtnText: {
-    color: '#38bdf8',
-    fontSize: 13,
+    color: '#ffffff',
+    fontSize: 12,
     fontWeight: '700',
   },
   infoBox: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(56, 189, 248, 0.06)',
+    backgroundColor: '#0d0d10',
     borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.2)',
-    borderRadius: 16,
-    padding: 16,
-    gap: 12,
-  },
-  infoTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#38bdf8',
-    marginBottom: 4,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 10,
+    padding: 12,
+    gap: 8,
+    alignItems: 'center',
   },
   infoText: {
-    fontSize: 12,
-    color: '#94a3b8',
-    lineHeight: 18,
+    fontSize: 11,
+    color: '#a1a1aa',
+    lineHeight: 16,
   },
   codeText: {
-    color: '#f1f5f9',
+    color: '#ffffff',
     fontFamily: 'monospace',
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

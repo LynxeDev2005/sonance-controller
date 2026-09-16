@@ -5,13 +5,13 @@ interface GlassCardProps {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   borderColor?: string;
-  variant?: 'default' | 'elevated' | 'glow';
+  variant?: 'default' | 'elevated' | 'highlight';
 }
 
 export const GlassCard: React.FC<GlassCardProps> = ({
   children,
   style,
-  borderColor = 'rgba(255, 255, 255, 0.08)',
+  borderColor = 'rgba(255, 255, 255, 0.12)',
   variant = 'default',
 }) => {
   return (
@@ -19,7 +19,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
       style={[
         styles.card,
         variant === 'elevated' && styles.elevated,
-        variant === 'glow' && styles.glow,
+        variant === 'highlight' && styles.highlight,
         { borderColor },
         style,
       ]}
@@ -31,26 +31,17 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#131927',
-    borderRadius: 20,
+    backgroundColor: '#0d0d10',
+    borderRadius: 14,
     borderWidth: 1,
-    padding: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    elevation: 6,
+    padding: 14,
   },
   elevated: {
-    backgroundColor: '#172033',
-    shadowOpacity: 0.5,
-    shadowRadius: 18,
+    backgroundColor: '#141418',
+    borderColor: 'rgba(255, 255, 255, 0.18)',
   },
-  glow: {
-    backgroundColor: '#141d30',
-    borderColor: 'rgba(56, 189, 248, 0.3)',
-    shadowColor: '#0284c7',
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
+  highlight: {
+    backgroundColor: '#18181c',
+    borderColor: 'rgba(255, 255, 255, 0.35)',
   },
 });

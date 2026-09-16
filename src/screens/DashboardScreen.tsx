@@ -7,7 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  Alert,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { DeviceConfig, PCStatus, PowerAction } from '../types';
@@ -15,7 +14,7 @@ import { PCControlService } from '../services/pcControlService';
 import { StatusHeader } from '../components/StatusHeader';
 import { ActionCard } from '../components/ActionCard';
 import { VoiceModal } from '../components/VoiceModal';
-import { Mic, CheckCircle2, AlertCircle } from 'lucide-react-native';
+import { Mic, CheckCircle2, AlertCircle, Sliders, BookOpen } from 'lucide-react-native';
 
 interface DashboardScreenProps {
   device: DeviceConfig;
@@ -51,7 +50,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   useEffect(() => {
     refreshStatus();
-    // Poll every 8 seconds
     const interval = setInterval(refreshStatus, 8000);
     return () => clearInterval(interval);
   }, [refreshStatus]);
@@ -60,7 +58,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     setLastNotification({ type, message });
     setTimeout(() => {
       setLastNotification(null);
-    }, 4500);
+    }, 4000);
   };
 
   const handleExecuteAction = async (action: PowerAction) => {
@@ -73,7 +71,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         } catch {}
         showBanner('success', result.message);
-        // Refresh status after short delay
         setTimeout(refreshStatus, 1500);
       } else {
         try {
@@ -90,6 +87,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* Clean Top Header */}
       <View style={styles.headerBar}>
         <View style={styles.brandContainer}>
           <Image
@@ -108,8 +106,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             } catch {}
             setVoiceModalVisible(true);
           }}
+          activeOpacity={0.7}
         >
-          <Mic size={18} color="#38bdf8" />
+          <Mic size={14} color="#000000" />
           <Text style={styles.voiceTriggerText}>Voice</Text>
         </TouchableOpacity>
       </View>
@@ -119,7 +118,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Device Status & Ping */}
+        {/* Device Status Header */}
         <StatusHeader
           device={device}
           status={status}
@@ -127,48 +126,33 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           onRefresh={refreshStatus}
         />
 
-        {/* Action Feedback Banner */}
+        {/* Compact Feedback Banner */}
         {lastNotification && (
-          <View
-            style={[
-              styles.feedbackBanner,
-              lastNotification.type === 'success'
-                ? styles.bannerSuccess
-                : styles.bannerError,
-            ]}
-          >
+          <View style={styles.feedbackBanner}>
             {lastNotification.type === 'success' ? (
-              <CheckCircle2 size={16} color="#4ade80" />
+              <CheckCircle2 size={14} color="#ffffff" />
             ) : (
-              <AlertCircle size={16} color="#f87171" />
+              <AlertCircle size={14} color="#a1a1aa" />
             )}
-            <Text
-              style={[
-                styles.bannerText,
-                lastNotification.type === 'success'
-                  ? styles.bannerTextSuccess
-                  : styles.bannerTextError,
-              ]}
-            >
+            <Text style={styles.bannerText}>
               {lastNotification.message}
             </Text>
           </View>
         )}
 
-        {/* Power Action Cards */}
+        {/* Compact Power Actions List */}
         <View style={styles.actionsSection}>
-          <Text style={styles.sectionTitle}>POWER CONTROLS</Text>
+          <Text style={styles.sectionTitle}>COMMANDS</Text>
 
-          {/* Turn On (Wake-on-LAN) */}
+          {/* Turn On (Wake-on-LAN) - Primary Action */}
           <ActionCard
             action="wake"
             title="Turn On PC"
-            subtitle={`Broadcast Magic Packet (${device.macAddress})`}
+            subtitle={`Wake-on-LAN (${device.macAddress})`}
             iconName="radio"
-            color="#059669"
-            glowColor="rgba(16, 185, 129, 0.25)"
             isLoading={activeActionLoading === 'wake'}
             onPress={handleExecuteAction}
+            isPrimary={true}
           />
 
           {/* Restart */}
@@ -177,8 +161,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             title="Restart PC"
             subtitle="Reboot Windows workstation"
             iconName="rotate-ccw"
-            color="#d97706"
-            glowColor="rgba(245, 158, 11, 0.25)"
             isLoading={activeActionLoading === 'restart'}
             onPress={handleExecuteAction}
             requiresConfirmation={true}
@@ -190,8 +172,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             title="Shutdown PC"
             subtitle="Power off target machine"
             iconName="power"
-            color="#dc2626"
-            glowColor="rgba(239, 68, 68, 0.25)"
             isLoading={activeActionLoading === 'shutdown'}
             onPress={handleExecuteAction}
             requiresConfirmation={true}
@@ -201,10 +181,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <ActionCard
             action="sleep"
             title="Sleep PC"
-            subtitle="Suspend Windows session to RAM"
+            subtitle="Suspend Windows session"
             iconName="moon"
-            color="#6366f1"
-            glowColor="rgba(99, 102, 241, 0.25)"
             isLoading={activeActionLoading === 'sleep'}
             onPress={handleExecuteAction}
           />
@@ -215,43 +193,31 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             title="Lock Workstation"
             subtitle="Lock screen immediately"
             iconName="lock"
-            color="#0284c7"
-            glowColor="rgba(56, 189, 248, 0.25)"
             isLoading={activeActionLoading === 'lock'}
             onPress={handleExecuteAction}
           />
         </View>
 
-        {/* Quick Links */}
+        {/* Compact Quick Links */}
         <View style={styles.quickLinksRow}>
           <TouchableOpacity
             style={styles.quickLinkBtn}
             onPress={onOpenSiriGuide}
+            activeOpacity={0.7}
           >
-            <Text style={styles.quickLinkText}>🎙️ Siri Shortcuts Guide</Text>
+            <BookOpen size={13} color="#a1a1aa" />
+            <Text style={styles.quickLinkText}>Siri Setup</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.quickLinkBtn}
             onPress={onOpenSettings}
+            activeOpacity={0.7}
           >
-            <Text style={styles.quickLinkText}>⚙️ Device Settings</Text>
+            <Sliders size={13} color="#a1a1aa" />
+            <Text style={styles.quickLinkText}>Settings</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      {/* Floating Big Voice Mic Button */}
-      <TouchableOpacity
-        style={styles.fabMic}
-        activeOpacity={0.85}
-        onPress={() => {
-          try {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          } catch {}
-          setVoiceModalVisible(true);
-        }}
-      >
-        <Mic size={26} color="#ffffff" />
-      </TouchableOpacity>
 
       {/* Voice Control Modal */}
       <VoiceModal
@@ -266,130 +232,103 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0b0f19',
+    backgroundColor: '#000000',
   },
   headerBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 6,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   brandContainer: {
     justifyContent: 'center',
   },
   logoImage: {
-    width: 140,
-    height: 32,
+    width: 125,
+    height: 28,
     alignSelf: 'flex-start',
   },
   appSubtitle: {
-    fontSize: 10,
-    color: '#94a3b8',
+    fontSize: 9,
+    color: '#71717a',
     fontWeight: '700',
-    letterSpacing: 1.5,
-    marginTop: 2,
+    letterSpacing: 1.2,
+    marginTop: 1,
     textTransform: 'uppercase',
   },
   voiceTriggerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(56, 189, 248, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.3)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
+    gap: 4,
+    backgroundColor: '#ffffff',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 8,
   },
   voiceTriggerText: {
-    color: '#38bdf8',
-    fontSize: 13,
+    color: '#000000',
+    fontSize: 12,
     fontWeight: '700',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 90,
+    paddingBottom: 30,
   },
   feedbackBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginHorizontal: 16,
-    marginVertical: 6,
-    padding: 12,
-    borderRadius: 12,
-  },
-  bannerSuccess: {
-    backgroundColor: 'rgba(34, 197, 94, 0.12)',
+    marginHorizontal: 14,
+    marginVertical: 4,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#18181b',
     borderWidth: 1,
-    borderColor: 'rgba(34, 197, 94, 0.3)',
-  },
-  bannerError: {
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.18)',
   },
   bannerText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-  },
-  bannerTextSuccess: {
-    color: '#4ade80',
-  },
-  bannerTextError: {
-    color: '#f87171',
+    color: '#ffffff',
   },
   actionsSection: {
-    marginHorizontal: 16,
-    marginTop: 10,
+    marginHorizontal: 14,
+    marginTop: 6,
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '800',
-    color: '#64748b',
+    color: '#71717a',
     letterSpacing: 0.8,
-    marginBottom: 8,
-    marginLeft: 4,
+    marginBottom: 4,
+    marginLeft: 2,
   },
   quickLinksRow: {
     flexDirection: 'row',
-    gap: 10,
-    marginHorizontal: 16,
-    marginTop: 16,
+    gap: 8,
+    marginHorizontal: 14,
+    marginTop: 10,
   },
   quickLinkBtn: {
     flex: 1,
-    backgroundColor: '#131927',
+    backgroundColor: '#0f0f12',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 14,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  quickLinkText: {
-    color: '#cbd5e1',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  fabMic: {
-    position: 'absolute',
-    right: 20,
-    bottom: 24,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#0284c7',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: 10,
+    paddingVertical: 10,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#38bdf8',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    elevation: 8,
+    gap: 6,
+  },
+  quickLinkText: {
+    color: '#d4d4d8',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
